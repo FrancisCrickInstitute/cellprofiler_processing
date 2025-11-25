@@ -451,24 +451,45 @@ output_dir/YYYYMMDD_HHMMSS_results/
 ├── data/
 │   ├── processed_image_data.parquet
 │   ├── processed_image_data_normalized.parquet
+│   ├── processed_image_data_standardscaler_scaled.parquet
 │   ├── processed_image_data_well_level.parquet
 │   ├── processed_image_data_well_level.csv
 │   ├── cp_for_viz_app.csv              # Final viz export
 │   └── cp_for_viz_app.parquet
 │
 ├── samples/
-│   └── *_sample_10000.csv              # CSV samples for inspection
+│   ├── processed_image_data_sample_10000.csv
+│   ├── processed_image_data_normalized_sample_10000.csv
+│   ├── processed_image_data_standardscaler_scaled_sample_10000.csv
+│   └── processed_image_data_well_level_sample_10000.csv
+│
+├── intermediate/
+│   ├── feature_selected_data.parquet
+│   ├── feature_selected_info.txt
+│   ├── feature_selected_sample.csv
+│   ├── normalization_info_all_conditions.txt
+│   ├── normalized_data_all_conditions.parquet
+│   ├── well_aggregated_data_all_conditions.parquet
+│   └── well_aggregated_sample_all_conditions.csv
 │
 ├── analysis/
 │   ├── pca/
+│   │   ├── pca_feature_loadings.csv
+│   │   ├── pca_variance_analysis.png
+│   │   ├── pca_variance_data.csv
+│   │   └── pca_variance_explained.csv
 │   ├── correlation/
+│   │   ├── correlation_heatmap_all_features.png
+│   │   └── correlation_matrix.csv
 │   └── histograms/
+│       ├── normalized/
+│       └── raw/
 │
 ├── visualizations/
 │   ├── umap/interactive/*.html
 │   ├── tsne/interactive/*.html
 │   └── coordinates/
-│       └── embedding_coordinates.csv   # All coordinates + metadata
+│       └── embedding_coordinates.csv
 │
 ├── visualizations_redo/                # Regenerated plots (well/replot modes)
 │   ├── umap/
@@ -480,19 +501,44 @@ output_dir/YYYYMMDD_HHMMSS_results/
 │   ├── test_mad_and_dmso.csv
 │   ├── reference_to_landmark_distances.csv
 │   ├── test_to_landmark_distances.csv
+│   ├── reference_centroids.parquet
+│   ├── test_centroids.parquet
+│   ├── reference_distances.parquet
+│   ├── reference_distances_sample.csv
+│   ├── test_distances.parquet
+│   ├── test_distances_sample.csv
+│   ├── landmark_metadata.parquet
+│   ├── landmark_metadata_sample.csv
+│   ├── treatment_metadata_for_clustering.csv
 │   ├── cosine_distance_matrix_for_clustering.parquet
 │   └── cosine_similarity_matrix_for_clustering.parquet
 │
 ├── hierarchical_clustering/            # If enabled
-│   └── [multiple PDF outputs]
+│   ├── clustering_information.csv
+│   ├── linkage_matrix.csv
+│   ├── ordered_cosine_similarity_matrix.parquet
+│   ├── reference_landmarks/
+│   │   └── reference_landmarks_all_chunks.pdf
+│   ├── reference_only/
+│   │   └── reference_only_all_chunks.pdf
+│   ├── test_and_all_reference_landmarks/
+│   │   └── test_and_all_reference_landmarks_all_chunks.pdf
+│   ├── test_and_reference/
+│   │   └── test_and_reference_all_chunks.pdf
+│   ├── test_only/
+│   │   └── test_only_all_chunks.pdf
+│   └── test_valid_and_relevant_landmarks/
+│       └── test_valid_and_relevant_landmarks_all_chunks.pdf
 │
 ├── landmark_threshold_analysis/        # If enabled
 │   ├── by_library/
 │   ├── comparisons/
 │   ├── distributions/
-│   └── summary_statistics.csv
+│   ├── summary_statistics.csv
+│   └── threshold_counts_per_treatment.csv
 │
 └── comprehensive_summary.txt
+```
 ```
 
 ---
@@ -637,3 +683,10 @@ Requires `run_landmark_analysis: true` in config (clustering depends on landmark
 
 - **v2.0** - Three-mode pipeline (full/well/replot), unified YAML config, landmark threshold analysis
 - **v1.0** - Initial release with basic processing and clustering
+
+
+## Related Repositories
+
+- [spc-distributed](https://github.com/FrancisCrickInstitute/spc-distributed)
+- [spc-data-explorer](https://github.com/FrancisCrickInstitute/spc-data-explorer) - Interactive visualization dashboard
+- [spc-cosine-analysis](https://github.com/FrancisCrickInstitute/spc-cosine-analysis) - SPC-based analysis pipeline
