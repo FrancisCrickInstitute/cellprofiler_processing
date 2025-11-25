@@ -1,0 +1,67 @@
+# Unified Cell Painting Configuration File
+# Plate barcode to experimental metadata mapping + processing parameters
+
+# Quality control thresholds
+quality_control:
+  missing_threshold: 0.05        # Threshold for missing/zero values (5%)
+  correlation_threshold: 0.95    # Correlation threshold (95%)
+  high_variability_threshold: 15 # High variability threshold in SDs
+  low_variability_threshold: 0.01 # Low variability threshold
+
+# Normalization settings
+normalization:
+  method: "z_score"                          # Normalization method: "z_score" or "robust_mad"
+  normalization_type: "control_based"       # "control_based" or "all_conditions"
+  control_column: "Metadata_control_type"   # Name of column containing the control
+  control_compound: "negative_control"      # Name of control
+
+# Visualization parameters for UMAP and t-SNE
+visualization:
+  umap_parameters:
+    - name: "n15_d0.1"
+      n_neighbors: 15
+      min_dist: 0.1
+      
+    - name: "n5_d0.01" 
+      n_neighbors: 5
+      min_dist: 0.01
+      
+    - name: "n30_d0.1"
+      n_neighbors: 30
+      min_dist: 0.1
+      
+    - name: "n15_d0.01"
+      n_neighbors: 15
+      min_dist: 0.01
+      
+    - name: "n15_d0.5"
+      n_neighbors: 15
+      min_dist: 0.5
+      
+    - name: "n50_d0.1"
+      n_neighbors: 50
+      min_dist: 0.1
+
+  tsne_parameters:
+    - name: "p30"
+      perplexity: 30
+      
+    - name: "p5"
+      perplexity: 5
+      
+    - name: "p10"
+      perplexity: 10
+      
+    - name: "p50"
+      perplexity: 50
+      
+    - name: "p100"
+      perplexity: 100
+
+# Plate barcode to experimental metadata mapping
+plate_dict:
+  # Astrocytes Stan
+    "000001": {"lib_plate_order": 1, "replicate": 1, "compound_uM": 0, "cell_type": "Astrocyte", "library": "Astrocyte_test"}
+    "000002": {"lib_plate_order": 2, "replicate": 1, "compound_uM": 0, "cell_type": "Astrocyte", "library": "Astrocyte_test"}
+    "000003": {"lib_plate_order": 3, "replicate": 1, "compound_uM": 0, "cell_type": "Astrocyte", "library": "Astrocyte_test"}
+    "000004": {"lib_plate_order": 4, "replicate": 1, "compound_uM": 0, "cell_type": "Astrocyte", "library": "Astrocyte_test"}

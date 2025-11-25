@@ -1,0 +1,15 @@
+__pycache__
+
+
+cellprofiler_analyser/slurm_out/*
+
+hierarchical_chunk_clustering_V6.py
+
+cellprofiler_remove_unwanted_parquet.txt
+
+cell_profiler_distances_trial_V2.py
+
+
+
+
+cellprofiler_analyser/submit/sbatch_run_modes.txt

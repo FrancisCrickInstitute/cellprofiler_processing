@@ -1,0 +1,248 @@
+# Unified Cell Painting Configuration File
+# Plate barcode to experimental metadata mapping + processing parameters
+
+# Quality control thresholds
+quality_control:
+  missing_threshold: 0.05        # Threshold for missing/zero values (5%)
+  correlation_threshold: 0.95    # Correlation threshold (95%)
+  high_variability_threshold: 15 # High variability threshold in SDs
+  low_variability_threshold: 0.01 # Low variability threshold
+
+# Normalization settings
+normalization:
+  method: "z_score"              # Normalization method: "z_score" or "robust_mad"
+  baseline: "all_conditions"     # Baseline for normalization: "dmso" or "all_conditions"
+  control_compound: "DMSO"       # Name of control compound
+
+# Visualization parameters for UMAP and t-SNE
+visualization:
+  umap_parameters:
+    - name: "n15_d0.1"
+      n_neighbors: 15
+      min_dist: 0.1
+      
+    - name: "n5_d0.01" 
+      n_neighbors: 5
+      min_dist: 0.01
+      
+    - name: "n30_d0.1"
+      n_neighbors: 30
+      min_dist: 0.1
+      
+    - name: "n15_d0.01"
+      n_neighbors: 15
+      min_dist: 0.01
+      
+    - name: "n15_d0.5"
+      n_neighbors: 15
+      min_dist: 0.5
+      
+    - name: "n50_d0.1"
+      n_neighbors: 50
+      min_dist: 0.1
+
+  tsne_parameters:
+    - name: "p30"
+      perplexity: 30
+      
+    - name: "p5"
+      perplexity: 5
+      
+    - name: "p10"
+      perplexity: 10
+      
+    - name: "p50"
+      perplexity: 50
+      
+    - name: "p100"
+      perplexity: 100
+
+# Plate barcode to experimental metadata mapping
+plate_dict:
+  # CRISPR genome screen plates
+    "29898": {"lib_plate_order": 1, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29899": {"lib_plate_order": 1, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29900": {"lib_plate_order": 1, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29901": {"lib_plate_order": 2, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29902": {"lib_plate_order": 2, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29903": {"lib_plate_order": 2, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29904": {"lib_plate_order": 3, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29905": {"lib_plate_order": 3, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29906": {"lib_plate_order": 3, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29907": {"lib_plate_order": 4, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29908": {"lib_plate_order": 4, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29909": {"lib_plate_order": 4, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29910": {"lib_plate_order": 5, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29911": {"lib_plate_order": 5, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29912": {"lib_plate_order": 5, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29913": {"lib_plate_order": 6, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29914": {"lib_plate_order": 6, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29915": {"lib_plate_order": 6, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29916": {"lib_plate_order": 7, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29917": {"lib_plate_order": 7, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29918": {"lib_plate_order": 7, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29919": {"lib_plate_order": 8, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29920": {"lib_plate_order": 8, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29921": {"lib_plate_order": 8, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29922": {"lib_plate_order": 9, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29923": {"lib_plate_order": 9, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29924": {"lib_plate_order": 9, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29925": {"lib_plate_order": 10, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29926": {"lib_plate_order": 10, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29927": {"lib_plate_order": 10, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29928": {"lib_plate_order": 11, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29929": {"lib_plate_order": 11, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29930": {"lib_plate_order": 11, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29931": {"lib_plate_order": 12, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29932": {"lib_plate_order": 12, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29933": {"lib_plate_order": 12, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29934": {"lib_plate_order": 13, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29935": {"lib_plate_order": 13, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29936": {"lib_plate_order": 13, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29937": {"lib_plate_order": 14, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29938": {"lib_plate_order": 14, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29939": {"lib_plate_order": 14, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29940": {"lib_plate_order": 15, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29941": {"lib_plate_order": 15, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29942": {"lib_plate_order": 15, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29943": {"lib_plate_order": 16, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29944": {"lib_plate_order": 16, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29945": {"lib_plate_order": 16, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29946": {"lib_plate_order": 17, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29947": {"lib_plate_order": 17, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29948": {"lib_plate_order": 17, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29949": {"lib_plate_order": 18, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29950": {"lib_plate_order": 18, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29951": {"lib_plate_order": 18, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29952": {"lib_plate_order": 19, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29953": {"lib_plate_order": 19, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29954": {"lib_plate_order": 19, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29955": {"lib_plate_order": 20, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29956": {"lib_plate_order": 20, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29957": {"lib_plate_order": 20, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29958": {"lib_plate_order": 21, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29959": {"lib_plate_order": 21, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29960": {"lib_plate_order": 21, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29961": {"lib_plate_order": 22, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29962": {"lib_plate_order": 22, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29963": {"lib_plate_order": 22, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29964": {"lib_plate_order": 23, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29965": {"lib_plate_order": 23, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29966": {"lib_plate_order": 23, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29967": {"lib_plate_order": 24, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29968": {"lib_plate_order": 24, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29969": {"lib_plate_order": 24, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29970": {"lib_plate_order": 25, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29971": {"lib_plate_order": 25, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29972": {"lib_plate_order": 25, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29973": {"lib_plate_order": 26, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29974": {"lib_plate_order": 26, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29975": {"lib_plate_order": 26, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29976": {"lib_plate_order": 27, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29977": {"lib_plate_order": 27, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29978": {"lib_plate_order": 27, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29979": {"lib_plate_order": 28, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29980": {"lib_plate_order": 28, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29981": {"lib_plate_order": 28, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29982": {"lib_plate_order": 29, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29983": {"lib_plate_order": 29, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29984": {"lib_plate_order": 29, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29985": {"lib_plate_order": 30, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29986": {"lib_plate_order": 30, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29987": {"lib_plate_order": 30, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29988": {"lib_plate_order": 31, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29989": {"lib_plate_order": 31, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29990": {"lib_plate_order": 31, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29991": {"lib_plate_order": 32, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29992": {"lib_plate_order": 32, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29993": {"lib_plate_order": 32, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29994": {"lib_plate_order": 33, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29995": {"lib_plate_order": 33, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29996": {"lib_plate_order": 33, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29997": {"lib_plate_order": 34, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29998": {"lib_plate_order": 34, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "29999": {"lib_plate_order": 34, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30000": {"lib_plate_order": 35, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30001": {"lib_plate_order": 35, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30002": {"lib_plate_order": 35, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30003": {"lib_plate_order": 36, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30004": {"lib_plate_order": 36, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30005": {"lib_plate_order": 36, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30006": {"lib_plate_order": 37, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30007": {"lib_plate_order": 37, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30008": {"lib_plate_order": 37, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30009": {"lib_plate_order": 38, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30010": {"lib_plate_order": 38, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30011": {"lib_plate_order": 38, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30012": {"lib_plate_order": 39, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30013": {"lib_plate_order": 39, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30014": {"lib_plate_order": 39, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30015": {"lib_plate_order": 40, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30016": {"lib_plate_order": 40, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30017": {"lib_plate_order": 40, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30018": {"lib_plate_order": 41, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30019": {"lib_plate_order": 41, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30020": {"lib_plate_order": 41, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30021": {"lib_plate_order": 42, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30022": {"lib_plate_order": 42, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30023": {"lib_plate_order": 42, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30024": {"lib_plate_order": 43, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30025": {"lib_plate_order": 43, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30026": {"lib_plate_order": 43, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30027": {"lib_plate_order": 44, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30028": {"lib_plate_order": 44, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30029": {"lib_plate_order": 44, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30030": {"lib_plate_order": 45, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30031": {"lib_plate_order": 45, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30032": {"lib_plate_order": 45, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30033": {"lib_plate_order": 46, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30034": {"lib_plate_order": 46, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30035": {"lib_plate_order": 46, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30036": {"lib_plate_order": 47, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30037": {"lib_plate_order": 47, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30038": {"lib_plate_order": 47, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30039": {"lib_plate_order": 48, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30040": {"lib_plate_order": 48, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30041": {"lib_plate_order": 48, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30042": {"lib_plate_order": 49, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30043": {"lib_plate_order": 49, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30044": {"lib_plate_order": 49, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30045": {"lib_plate_order": 50, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30046": {"lib_plate_order": 50, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30047": {"lib_plate_order": 50, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30048": {"lib_plate_order": 51, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30049": {"lib_plate_order": 51, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30050": {"lib_plate_order": 51, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30051": {"lib_plate_order": 52, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30052": {"lib_plate_order": 52, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30053": {"lib_plate_order": 52, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30054": {"lib_plate_order": 53, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30055": {"lib_plate_order": 53, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30056": {"lib_plate_order": 53, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30057": {"lib_plate_order": 54, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30058": {"lib_plate_order": 54, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30059": {"lib_plate_order": 54, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30060": {"lib_plate_order": 55, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30061": {"lib_plate_order": 55, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30062": {"lib_plate_order": 55, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30063": {"lib_plate_order": 56, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30064": {"lib_plate_order": 56, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30065": {"lib_plate_order": 56, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30066": {"lib_plate_order": 57, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30067": {"lib_plate_order": 57, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30068": {"lib_plate_order": 57, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30069": {"lib_plate_order": 58, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30070": {"lib_plate_order": 58, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30071": {"lib_plate_order": 58, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30072": {"lib_plate_order": 59, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30073": {"lib_plate_order": 59, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30074": {"lib_plate_order": 59, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30075": {"lib_plate_order": 60, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30076": {"lib_plate_order": 60, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30077": {"lib_plate_order": 60, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30078": {"lib_plate_order": 61, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30079": {"lib_plate_order": 61, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30080": {"lib_plate_order": 61, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30081": {"lib_plate_order": 62, "replicate": 1, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30082": {"lib_plate_order": 62, "replicate": 2, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}
+    "30083": {"lib_plate_order": 62, "replicate": 3, "compound_uM": 0.0, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_genome"}

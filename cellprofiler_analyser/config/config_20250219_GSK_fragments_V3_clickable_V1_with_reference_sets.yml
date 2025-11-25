@@ -1,0 +1,181 @@
+# Unified Cell Painting Configuration File
+# Plate barcode to experimental metadata mapping + processing parameters
+
+# Quality control thresholds
+quality_control:
+  missing_threshold: 0.05        # Threshold for missing/zero values (5%)
+  correlation_threshold: 0.95    # Correlation threshold (95%)
+  high_variability_threshold: 15 # High variability threshold in SDs
+  low_variability_threshold: 0.01 # Low variability threshold
+
+# Normalization settings
+normalization:
+  method: "z_score"              # Normalization method: "z_score" or "robust_mad"
+  baseline: "all_conditions"     # Baseline for normalization: "dmso" or "all_conditions"
+  control_compound: "DMSO"       # Name of control compound
+
+# Visualization parameters for UMAP and t-SNE
+visualization:
+  umap_parameters:
+    - name: "n15_d0.1"
+      n_neighbors: 15
+      min_dist: 0.1
+      
+    - name: "n5_d0.01" 
+      n_neighbors: 5
+      min_dist: 0.01
+      
+    - name: "n30_d0.1"
+      n_neighbors: 30
+      min_dist: 0.1
+      
+    - name: "n15_d0.01"
+      n_neighbors: 15
+      min_dist: 0.01
+      
+    - name: "n15_d0.5"
+      n_neighbors: 15
+      min_dist: 0.5
+      
+    - name: "n50_d0.1"
+      n_neighbors: 50
+      min_dist: 0.1
+
+  tsne_parameters:
+    - name: "p30"
+      perplexity: 30
+      
+    - name: "p5"
+      perplexity: 5
+      
+    - name: "p10"
+      perplexity: 10
+      
+    - name: "p50"
+      perplexity: 50
+      
+    - name: "p100"
+      perplexity: 100
+
+# Plate barcode to experimental metadata mapping
+plate_dict:
+  # GSK chemogenetic V1 - 0.1 uM concentration
+    "31887": {"lib_plate_order": 1, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31888": {"lib_plate_order": 1, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31889": {"lib_plate_order": 1, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK clickable V1 - Plate 2
+    "31890": {"lib_plate_order": 2, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31891": {"lib_plate_order": 2, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31892": {"lib_plate_order": 2, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK fragments V3 - Plate 3
+    "31893": {"lib_plate_order": 3, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31894": {"lib_plate_order": 3, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31895": {"lib_plate_order": 3, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 4
+    "31896": {"lib_plate_order": 4, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31897": {"lib_plate_order": 4, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31898": {"lib_plate_order": 4, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 5
+    "31899": {"lib_plate_order": 5, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31900": {"lib_plate_order": 5, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31901": {"lib_plate_order": 5, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 6
+    "31902": {"lib_plate_order": 6, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31903": {"lib_plate_order": 6, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31904": {"lib_plate_order": 6, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 7
+    "31905": {"lib_plate_order": 7, "replicate": 1, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31906": {"lib_plate_order": 7, "replicate": 2, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31907": {"lib_plate_order": 7, "replicate": 3, "compound_uM": 2.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    
+    # 10 µM plates
+    # GSK clickable V1 - Plate 1
+    "31908": {"lib_plate_order": 1, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31909": {"lib_plate_order": 1, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31910": {"lib_plate_order": 1, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK clickable V1 - Plate 2
+    "31911": {"lib_plate_order": 2, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31912": {"lib_plate_order": 2, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31913": {"lib_plate_order": 2, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK fragments V3 - Plate 3
+    "31914": {"lib_plate_order": 3, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31915": {"lib_plate_order": 3, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31916": {"lib_plate_order": 3, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 4
+    "31917": {"lib_plate_order": 4, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31918": {"lib_plate_order": 4, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31919": {"lib_plate_order": 4, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 5
+    "31920": {"lib_plate_order": 5, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31921": {"lib_plate_order": 5, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31922": {"lib_plate_order": 5, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 6
+    "31923": {"lib_plate_order": 6, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31924": {"lib_plate_order": 6, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31925": {"lib_plate_order": 6, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 7
+    "31926": {"lib_plate_order": 7, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31927": {"lib_plate_order": 7, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31928": {"lib_plate_order": 7, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    
+    # 30 µM plates
+    # GSK clickable V1 - Plate 1
+    "31929": {"lib_plate_order": 1, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31930": {"lib_plate_order": 1, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31931": {"lib_plate_order": 1, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK clickable V1 - Plate 2
+    "31932": {"lib_plate_order": 2, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31933": {"lib_plate_order": 2, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    "31934": {"lib_plate_order": 2, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_clickable_V1"}
+    # GSK fragments V3 - Plate 3
+    "31935": {"lib_plate_order": 3, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31936": {"lib_plate_order": 3, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31937": {"lib_plate_order": 3, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 4
+    "31938": {"lib_plate_order": 4, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31939": {"lib_plate_order": 4, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31940": {"lib_plate_order": 4, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 5
+    "31941": {"lib_plate_order": 5, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31942": {"lib_plate_order": 5, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31943": {"lib_plate_order": 5, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 6
+    "31944": {"lib_plate_order": 6, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31945": {"lib_plate_order": 6, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31946": {"lib_plate_order": 6, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    # GSK fragments V3 - Plate 7
+    "31947": {"lib_plate_order": 7, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31948": {"lib_plate_order": 7, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+    "31949": {"lib_plate_order": 7, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "GSK_fragments_V3"}
+
+    # JUMP V1 library screen
+    # 0.1 µM plates
+    "30807": {"lib_plate_order": 8, "replicate": 1, "compound_uM": 0.1, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30808": {"lib_plate_order": 8, "replicate": 2, "compound_uM": 0.1, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30809": {"lib_plate_order": 8, "replicate": 3, "compound_uM": 0.1, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    # 1 µM plates
+    "30810": {"lib_plate_order": 8, "replicate": 1, "compound_uM": 1.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30811": {"lib_plate_order": 8, "replicate": 2, "compound_uM": 1.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30812": {"lib_plate_order": 8, "replicate": 3, "compound_uM": 1.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    # 10µM plates
+    "30813": {"lib_plate_order": 8, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30814": {"lib_plate_order": 8, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+    "30815": {"lib_plate_order": 8, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "JUMP_V1"}
+
+    # CRISPR validation library screen
+    "30821": {"lib_plate_order": 9, "replicate": 1, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_validation_V2"}
+    "30822": {"lib_plate_order": 9, "replicate": 2, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_validation_V2"}
+    "30823": {"lib_plate_order": 9, "replicate": 3, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_validation_V2"}
+    "30824": {"lib_plate_order": 9, "replicate": 4, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_validation_V2"}
+    "30825": {"lib_plate_order": 9, "replicate": 5, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_validation_V2"}
+
+    # CRISPR pilot screen
+    "31869":  {"lib_plate_order": 10, "replicate": 1, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31870":  {"lib_plate_order": 10, "replicate": 2, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31871":  {"lib_plate_order": 10, "replicate": 3, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31872":  {"lib_plate_order": 11, "replicate": 1, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31873":  {"lib_plate_order": 11, "replicate": 2, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31874":  {"lib_plate_order": 11, "replicate": 3, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31875":  {"lib_plate_order": 12, "replicate": 1, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31876":  {"lib_plate_order": 12, "replicate": 2, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}
+    "31877":  {"lib_plate_order": 12, "replicate": 3, "compound_uM": 0.00, "cell_type": "HaCaT iCas9 WT", "library": "CRISPR_cell_painting_pilot"}

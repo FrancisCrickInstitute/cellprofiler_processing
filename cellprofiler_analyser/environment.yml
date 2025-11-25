@@ -1,0 +1,21 @@
+name: cellprofiler_analysis
+channels:
+dependencies:
+  - matplotlib=3.10.0
+  - matplotlib-base=3.10.0
+  - numba=0.61.2
+  - numpy=1.26.4
+  - numpy-base=1.26.4
+  - pandas=2.2.3
+  - pyarrow=19.0.0
+  - pyqt=6.7.1
+  - pyqt6-sip=13.9.1
+  - python=3.11.13
+  - python-dateutil=2.9.0.post0
+  - python-tzdata=2025.2
+  - python_abi=3.11
+  - scikit-learn=1.6.1
+  - scipy=1.15.3
+  - seaborn=0.13.2
+  - seaborn-base=0.13.2
+  - statsmodels=0.14.4

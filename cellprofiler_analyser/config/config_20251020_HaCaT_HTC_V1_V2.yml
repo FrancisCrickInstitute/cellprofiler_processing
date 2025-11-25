@@ -1,0 +1,222 @@
+# Unified Cell Painting Configuration File
+# Plate barcode to experimental metadata mapping + processing parameters
+
+# Quality control thresholds
+quality_control:
+  missing_threshold: 0.05        # Threshold for missing/zero values (5%)
+  correlation_threshold: 0.95    # Correlation threshold (95%)
+  high_variability_threshold: 15 # High variability threshold in SDs
+  low_variability_threshold: 0.01 # Low variability threshold
+
+# Normalization settings
+normalization:
+  method: "z_score"                          # Normalization method: "z_score" or "robust_mad"
+  normalization_type: "all_conditions"      # "control_based" or "all_conditions"
+  control_column: "Metadata_perturbation_name"   # Name of column containing the control
+  control_compound: "DMSO"                   # Name of control
+
+# Visualization parameters for UMAP and t-SNE
+visualization:
+  umap_parameters:
+    - name: "n15_d0.1"
+      n_neighbors: 15
+      min_dist: 0.1
+      
+    - name: "n5_d0.01" 
+      n_neighbors: 5
+      min_dist: 0.01
+      
+    - name: "n30_d0.1"
+      n_neighbors: 30
+      min_dist: 0.1
+      
+    - name: "n15_d0.01"
+      n_neighbors: 15
+      min_dist: 0.01
+      
+    - name: "n15_d0.5"
+      n_neighbors: 15
+      min_dist: 0.5
+      
+    - name: "n50_d0.1"
+      n_neighbors: 50
+      min_dist: 0.1
+
+  tsne_parameters:
+    - name: "p30"
+      perplexity: 30
+      
+    - name: "p5"
+      perplexity: 5
+      
+    - name: "p10"
+      perplexity: 10
+      
+    - name: "p50"
+      perplexity: 50
+      
+    - name: "p100"
+      perplexity: 100
+
+
+# ============================================================================
+# OPTIONAL: landmark_analysis section (has defaults, not required)
+# ============================================================================
+landmark_analysis:
+  mad_threshold: 0.20
+  dmso_percentile: 80
+  min_replicates: 2
+
+
+# Plate barcode to experimental metadata mapping
+plate_dict:
+    # HTC V1 & V2: /nemo/project/proj-prosperity/hts/raw/projects/20251020_HaCaT_GSK_HTC_V1_V2_cell_paint
+    
+    # Library plate 79 - 3 uM
+    # HTC V1
+    "32718": {"lib_plate_order": 79, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32719": {"lib_plate_order": 79, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32720": {"lib_plate_order": 79, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+
+    # HTC V2
+    # Library plate 80 - 3 uM
+    "32688": {"lib_plate_order": 80, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32689": {"lib_plate_order": 80, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32690": {"lib_plate_order": 80, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 81 - 3 uM
+    "32691": {"lib_plate_order": 81, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32692": {"lib_plate_order": 81, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32693": {"lib_plate_order": 81, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 82 - 3 uM
+    "32694": {"lib_plate_order": 82, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32695": {"lib_plate_order": 82, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32696": {"lib_plate_order": 82, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 83 - 3 uM
+    "32697": {"lib_plate_order": 83, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32698": {"lib_plate_order": 83, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32699": {"lib_plate_order": 83, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 84 - 3 uM
+    "32700": {"lib_plate_order": 84, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32701": {"lib_plate_order": 84, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32702": {"lib_plate_order": 84, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 85 - 3 uM
+    "32703": {"lib_plate_order": 85, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32704": {"lib_plate_order": 85, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32705": {"lib_plate_order": 85, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 86 - 3 uM
+    "32706": {"lib_plate_order": 86, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32707": {"lib_plate_order": 86, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32708": {"lib_plate_order": 86, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 87 - 3 uM
+    "32709": {"lib_plate_order": 87, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32710": {"lib_plate_order": 87, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32711": {"lib_plate_order": 87, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 88 - 3 uM
+    "32712": {"lib_plate_order": 88, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32713": {"lib_plate_order": 88, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32714": {"lib_plate_order": 88, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 89 - 3 uM
+    "32715": {"lib_plate_order": 89, "replicate": 1, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32716": {"lib_plate_order": 89, "replicate": 2, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32717": {"lib_plate_order": 89, "replicate": 3, "compound_uM": 3.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+
+
+
+    # Library plate 79 - 10 uM
+    # HTC V1
+    "32751": {"lib_plate_order": 79, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32752": {"lib_plate_order": 79, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32753": {"lib_plate_order": 79, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+
+    # HTC V2
+    # Library plate 80 - 10 uM
+    "32721": {"lib_plate_order": 80, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32722": {"lib_plate_order": 80, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32723": {"lib_plate_order": 80, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 81 - 10 uM
+    "32724": {"lib_plate_order": 81, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32725": {"lib_plate_order": 81, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32726": {"lib_plate_order": 81, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 82 - 10 uM
+    "32727": {"lib_plate_order": 82, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32728": {"lib_plate_order": 82, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32729": {"lib_plate_order": 82, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 83 - 10 uM
+    "32730": {"lib_plate_order": 83, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32731": {"lib_plate_order": 83, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32732": {"lib_plate_order": 83, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 84 - 10 uM
+    "32733": {"lib_plate_order": 84, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32734": {"lib_plate_order": 84, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32735": {"lib_plate_order": 84, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 85 - 10 uM
+    "32736": {"lib_plate_order": 85, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32737": {"lib_plate_order": 85, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32738": {"lib_plate_order": 85, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 86 - 10 uM
+    "32739": {"lib_plate_order": 86, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32740": {"lib_plate_order": 86, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32741": {"lib_plate_order": 86, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 87 - 10 uM
+    "32742": {"lib_plate_order": 87, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32743": {"lib_plate_order": 87, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32744": {"lib_plate_order": 87, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 88 - 10 uM
+    "32745": {"lib_plate_order": 88, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32746": {"lib_plate_order": 88, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32747": {"lib_plate_order": 88, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 89 - 10 uM
+    "32748": {"lib_plate_order": 89, "replicate": 1, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32749": {"lib_plate_order": 89, "replicate": 2, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32750": {"lib_plate_order": 89, "replicate": 3, "compound_uM": 10.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+
+
+
+    # Library plate 79 - 30 uM
+    # HTC V1
+    "32784": {"lib_plate_order": 79, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32785": {"lib_plate_order": 79, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+    "32786": {"lib_plate_order": 79, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V1", "type": "test"}
+
+    # HTC V2
+    # Library plate 80 - 30 uM
+    "32754": {"lib_plate_order": 80, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32755": {"lib_plate_order": 80, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32756": {"lib_plate_order": 80, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 81 - 30 uM
+    "32757": {"lib_plate_order": 81, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32758": {"lib_plate_order": 81, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32759": {"lib_plate_order": 81, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 82 - 30 uM
+    "32760": {"lib_plate_order": 82, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32761": {"lib_plate_order": 82, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32762": {"lib_plate_order": 82, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 83 - 30 uM
+    "32763": {"lib_plate_order": 83, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32764": {"lib_plate_order": 83, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32765": {"lib_plate_order": 83, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 84 - 30 uM
+    "32766": {"lib_plate_order": 84, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32767": {"lib_plate_order": 84, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32768": {"lib_plate_order": 84, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 85 - 30 uM
+    "32769": {"lib_plate_order": 85, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32770": {"lib_plate_order": 85, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32771": {"lib_plate_order": 85, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 86 - 30 uM
+    "32772": {"lib_plate_order": 86, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32773": {"lib_plate_order": 86, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32774": {"lib_plate_order": 86, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 87 - 30 uM
+    "32775": {"lib_plate_order": 87, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32776": {"lib_plate_order": 87, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32777": {"lib_plate_order": 87, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 88 - 30 uM
+    "32778": {"lib_plate_order": 88, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32779": {"lib_plate_order": 88, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32780": {"lib_plate_order": 88, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    # Library plate 89 - 30 uM
+    "32781": {"lib_plate_order": 89, "replicate": 1, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32782": {"lib_plate_order": 89, "replicate": 2, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+    "32783": {"lib_plate_order": 89, "replicate": 3, "compound_uM": 30.0, "cell_type": "HaCaT iCas9 WT", "library": "HTC_V2", "type": "test"}
+

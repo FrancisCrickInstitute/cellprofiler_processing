@@ -1,0 +1,21 @@
+name: 20250715_HaCaT_all_datasets_cell_paint
+input_dir: /nemo/project/proj-prosperity/hts/raw/projects/20250715_HaCaT_all_datasets_cell_paint/data/max_index_files
+output_dir: /nemo/project/proj-prosperity/hts/raw/projects/20250715_HaCaT_all_datasets_cell_paint/cellprofiler/output
+working_dir: /nemo/project/proj-prosperity/hts/raw/projects/20250715_HaCaT_all_datasets_cell_paint/cellprofiler
+pipeline: /nemo/project/proj-prosperity/hts/raw/projects/20250715_HaCaT_all_datasets_cell_paint/cellprofiler/pipelines/18_09_2023_HaCaT_4_channel_with_new_measurements_20X_confocal.cppipe
+container: /path/to/singularity/cellprofiler/container
+chunk: 384
+memory: 16G
+runtime: 7-00:00:00
+node: cpu
+submit: false
+collect: true
+channel_mapping:
+  HOECHST 33342: DNA
+  Alexa 488: RNAandER
+  Alexa 568: AGP
+  MitoTracker Deep Red: Mito
+
+
+
+

@@ -1,0 +1,21 @@
+name: Joe_Stan_Astrocytes_cell_paint_30062025
+input_dir: /nemo/stp/hts/working/Phenix/Joe_Stan_Astrocytes_cell_paint_30062025/data/max_index_files
+output_dir: /nemo/stp/hts/working/Phenix/Joe_Stan_Astrocytes_cell_paint_30062025/cellprofiler/output
+working_dir: /nemo/stp/hts/working/Phenix/Joe_Stan_Astrocytes_cell_paint_30062025/cellprofiler
+pipeline: /nemo/stp/hts/working/Phenix/Joe_Stan_Astrocytes_cell_paint_30062025/cellprofiler/pipelines/astrocytes_cell_paint_V1.cppipe
+container: /path/to/singularity/cellprofiler/container
+chunk: 384
+memory: 64G
+runtime: 72:00:00
+node: cpu
+submit: false
+collect: true
+channel_mapping:
+  HOECHST 33342: DNA
+  Alexa 488: RNAandER
+  Alexa 568: AGP
+  MitoTracker Deep Red: Mito
+
+
+
+
