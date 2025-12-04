@@ -168,8 +168,8 @@ def save_all_datasets(datasets: dict, output_dir: Path) -> dict:
     name_mappings = {
         'processed_data': 'processed_image_data',
         'normalized_data': 'processed_image_data_normalized',
-        'scaled_data': 'processed_image_data_standardscaler_scaled',
-        'well_aggregated_data': 'processed_image_data_well_level'
+        'well_aggregated_data': 'processed_image_data_well_level',
+        'treatment_aggregated_data': 'processed_image_data_treatment_level'
     }
     
     for key, data in datasets.items():
@@ -186,8 +186,8 @@ def save_all_datasets(datasets: dict, output_dir: Path) -> dict:
             sample_path = save_sample_data(data, samples_dir, base_name)
             saved_files[f'{key}_sample'] = sample_path
             
-            # Well-level data also gets full CSV in data directory
-            if key == 'well_aggregated_data':
+            # Well-level and treatment-level data also get full CSV in data directory
+            if key in ['well_aggregated_data', 'treatment_aggregated_data']:
                 csv_path = data_dir / f"{base_name}.csv"
                 data.to_csv(csv_path, index=False)
                 logger.info(f"Well-level data saved as CSV: {csv_path}")

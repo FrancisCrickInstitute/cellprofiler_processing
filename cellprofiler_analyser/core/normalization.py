@@ -432,6 +432,50 @@ class DataNormalizer:
         except Exception as e:
             logger.error(f"Error during well-level aggregation: {e}")
             return None
+        
+
+    def aggregate_to_treatment_level(self, well_data: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """
+        Aggregate well-level data to treatment level (median across wells replicates of the same treatment).
+        For cols with 'Metdata_' prefix, take first instance.
+        
+        Args:
+            well_data: Well-level data
+            
+        Returns:
+            pd.DataFrame: Treatment-aggregated data
+        """
+        print("\n TREATMENT-LEVEL AGGREGATION")
+        print("Aggregating data to treatment level (median across wells per treatment)")
+        
+        try:
+            if well_data is None:
+                logger.error("No well-level data available for aggregation")
+                return None
+            
+            feature_cols = [col for col in well_data.columns if not col.startswith('Metadata_')]
+            metadata_cols = [col for col in well_data.columns if col.startswith('Metadata_')]
+            
+            agg_dict = {}
+            for col in metadata_cols:
+                if col != 'Metadata_treatment':
+                    agg_dict[col] = 'first'
+            for col in feature_cols:
+                agg_dict[col] = 'median'
+            
+            treatment_data = well_data.groupby('Metadata_treatment').agg(agg_dict).reset_index()
+            
+            print(f" TREATMENT AGGREGATION COMPLETED")
+            print(f" Aggregated data shape: {treatment_data.shape}")
+            print(f" Reduced from {len(well_data):,} wells to {len(treatment_data):,} treatments")
+            
+            return treatment_data
+            
+        except Exception as e:
+            logger.error(f"Error during treatment-level aggregation: {e}")
+            return None
+    
+    
     
     def process_normalization_pipeline(self, data: pd.DataFrame, 
                                      control_compound: str = "DMSO",
@@ -458,4 +502,9 @@ class DataNormalizer:
         if scaled_data is not None:
             well_aggregated_data = self.aggregate_to_well_level(scaled_data)
         
-        return normalized_data, scaled_data, well_aggregated_data
+        # Aggregate to treatment level
+        treatment_aggregated_data = None
+        if well_aggregated_data is not None:
+            treatment_aggregated_data = self.aggregate_to_treatment_level(well_aggregated_data)
+        
+        return normalized_data, well_aggregated_data, treatment_aggregated_data

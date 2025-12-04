@@ -85,8 +85,8 @@ class EnhancedCellPaintingProcessor:
         self.raw_data = None
         self.processed_data = None
         self.normalized_data = None
-        self.scaled_data = None
         self.well_aggregated_data = None
+        self.treatment_aggregated_data = None
         
         # Track processing statistics
         self.removed_rows_count = 0
@@ -533,7 +533,7 @@ class EnhancedCellPaintingProcessor:
             print(f" Normalization type: {'all_conditions' if use_all_conditions else 'control_based'}")
 
             # Run normalization pipeline with method selection
-            self.normalized_data, self.scaled_data, self.well_aggregated_data = \
+            self.normalized_data, self.well_aggregated_data, self.treatment_aggregated_data = \
                 self.normalizer.process_normalization_pipeline(
                     data_for_norm, 
                     actual_control_compound,
@@ -708,11 +708,11 @@ class EnhancedCellPaintingProcessor:
             if self.normalized_data is not None:
                 datasets['normalized_data'] = self.normalized_data
             
-            if self.scaled_data is not None:
-                datasets['scaled_data'] = self.scaled_data
-            
             if self.well_aggregated_data is not None:
                 datasets['well_aggregated_data'] = self.well_aggregated_data
+            
+            if self.treatment_aggregated_data is not None:
+                datasets['treatment_aggregated_data'] = self.treatment_aggregated_data
             
             # Save all datasets
             saved_files = save_all_datasets(datasets, self.output_dir)
@@ -838,10 +838,10 @@ class EnhancedCellPaintingProcessor:
         report.append(f"  +-- normalization_info{baseline_suffix}.txt [Normalization details]")
         report.append("")
         report.append("data/ [FINAL DATASETS]")
-        report.append("  |-- processed_image_data.parquet")
-        report.append("  |-- processed_image_data_normalized.parquet")
-        report.append("  |-- processed_image_data_standardscaler_scaled.parquet [same as normalized]")
-        report.append("  +-- processed_image_data_well_level.parquet")
+        report.append("  |-- processed_image_data.parquet [Image-level, feature-selected]")
+        report.append("  |-- processed_image_data_normalized.parquet [Image-level, Z-score normalized]")
+        report.append("  |-- processed_image_data_well_level.parquet/.csv [Well-level aggregated]")
+        report.append("  +-- processed_image_data_treatment_level.parquet/.csv [Treatment-level aggregated]")
         report.append("")
         report.append("visualizations/ [OPTIMIZED PLOTS]")
         report.append("  |-- coordinates/embedding_coordinates.csv [All coordinates + metadata]")
