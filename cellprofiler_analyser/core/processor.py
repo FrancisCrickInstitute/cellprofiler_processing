@@ -1320,8 +1320,15 @@ class EnhancedCellPaintingProcessor:
             print("="*80)
             # Check if landmark file exists
             landmark_file = self.output_dir / "landmark_analysis" / "reference_mad_and_dmso.csv"
+            landmarks_csv = self.output_dir / "landmark_analysis" / "cellprofiler_landmarks.csv"
             
-            if landmark_file.exists():
+            if not landmark_file.exists():
+                print(f" ⚠ Landmark file not found: {landmark_file}")
+                print(" Skipping threshold analysis (requires reference data)")
+            elif not landmarks_csv.exists():
+                print(f" ⚠ No landmarks identified (test-only mode or no qualifying compounds)")
+                print(" Skipping threshold analysis (requires landmarks from reference set)")
+            else:
                 # Get well-level data
                 well_data_file = self.output_dir / "data" / "processed_image_data_well_level.parquet"
                 
@@ -1348,17 +1355,21 @@ class EnhancedCellPaintingProcessor:
                         print(" ⚠ Landmark threshold analysis failed")
                 else:
                     print(f" ⚠ Well-level data not found: {well_data_file}")
-            else:
-                print(f" ⚠ Landmark file not found: {landmark_file}")
-                print(" Skipping threshold analysis")
+
         
         # Run hierarchical clustering if enabled (requires landmark analysis outputs)
         if run_hierarchical_clustering:
-            if landmark_success:
+            # Check if distance matrix exists (created even in test-only or reference-only mode)
+            distance_matrix_path = self.output_dir / "landmark_analysis" / "cosine_distance_matrix_for_clustering.parquet"
+            
+            if distance_matrix_path.exists():
                 logger.info("\nRunning hierarchical clustering (uses landmark analysis outputs)...")
                 clustering_success = self.run_hierarchical_clustering()
                 if not clustering_success:
                     logger.warning("Hierarchical clustering failed")
+            elif landmark_success:
+                logger.warning("Hierarchical clustering requested but distance matrix not found")
+                logger.warning(f"  Expected: {distance_matrix_path}")
             else:
                 logger.warning("Hierarchical clustering requested but landmark analysis failed/not run")
                 logger.warning("  Hierarchical clustering requires landmark analysis distance matrices")
@@ -1452,19 +1463,27 @@ class EnhancedCellPaintingProcessor:
         reference_mad_path = landmark_dir / "reference_mad_and_dmso.csv"
         test_landmark_path = landmark_dir / "test_to_landmark_distances.csv"
         
-        # Check if required files exist
-        required_files = [
-            distance_matrix_path, similarity_matrix_path, treatment_metadata_path,
-            reference_mad_path, test_landmark_path
+        # Check if core required files exist (distance matrix, similarity matrix, metadata)
+        core_required_files = [
+            distance_matrix_path, similarity_matrix_path, treatment_metadata_path
         ]
         
-        missing_files = [f for f in required_files if not f.exists()]
-        if missing_files:
+        missing_core = [f for f in core_required_files if not f.exists()]
+        if missing_core:
             logger.error(f"Missing required files for hierarchical clustering:")
-            for f in missing_files:
+            for f in missing_core:
                 logger.error(f"  - {f}")
             logger.error("Please run landmark analysis first to generate these files")
             return False
+        
+        # Check optional files (may not exist in test-only or reference-only mode)
+        if not reference_mad_path.exists():
+            logger.info(f"Reference MAD file not found (test-only mode): {reference_mad_path}")
+            reference_mad_path = None
+        
+        if not test_landmark_path.exists():
+            logger.info(f"Test landmark file not found (reference-only mode): {test_landmark_path}")
+            test_landmark_path = None
         
         try:
             from ..analysis.hierarchical_clustering import HierarchicalClusteringAnalyzer

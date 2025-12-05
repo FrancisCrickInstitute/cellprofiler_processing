@@ -126,13 +126,21 @@ class HierarchicalClusteringAnalyzer:
         logger.info(f"Loading treatment metadata from: {metadata_path}")
         metadata_df = pd.read_csv(metadata_path)
         
-        # Load reference data with is_landmark column
-        logger.info(f"Loading reference data from: {ref_mad_path}")
-        ref_df = pd.read_csv(ref_mad_path)
+        # Load reference data with is_landmark column (optional - may not exist in test-only mode)
+        if ref_mad_path is not None and Path(ref_mad_path).exists():
+            logger.info(f"Loading reference data from: {ref_mad_path}")
+            ref_df = pd.read_csv(ref_mad_path)
+        else:
+            logger.info("No reference MAD data available (test-only mode)")
+            ref_df = pd.DataFrame()
         
-        # Load test data with valid_for_phenotypic_makeup column
-        logger.info(f"Loading test data from: {test_landmark_path}")
-        test_df = pd.read_csv(test_landmark_path)
+        # Load test data with valid_for_phenotypic_makeup column (optional - may not exist in reference-only mode)
+        if test_landmark_path is not None and Path(test_landmark_path).exists():
+            logger.info(f"Loading test data from: {test_landmark_path}")
+            test_df = pd.read_csv(test_landmark_path)
+        else:
+            logger.info("No test landmark data available (reference-only mode)")
+            test_df = pd.DataFrame()
         
         logger.info(f"✓ Loaded data: {len(treatment_names)} treatments")
         return distance_matrix, treatment_names, metadata_df, ref_df, test_df
@@ -150,9 +158,10 @@ class HierarchicalClusteringAnalyzer:
         enhanced_labels = []
         libraries = []
         
-        # Get library definitions from config
-        TEST_LIBRARIES = config.get('library_definitions', {}).get('test_libraries', [])
-        REFERENCE_LIBRARIES = config.get('library_definitions', {}).get('reference_libraries', [])
+        # Get library definitions from config (handle None values)
+        library_defs = config.get('library_definitions') or {}
+        TEST_LIBRARIES = library_defs.get('test_libraries') or []
+        REFERENCE_LIBRARIES = library_defs.get('reference_libraries') or []
         
         for _, row in metadata_df.iterrows():
             treatment = row.get('Metadata_treatment', '')
@@ -269,27 +278,31 @@ class HierarchicalClusteringAnalyzer:
     
     def _create_splits_ordered(self, ordered_treatments, ordered_libraries, ref_df, test_df, config):
         """Create splits using ordered data and config-defined libraries"""
-        # Get library definitions from config
-        TEST_LIBRARIES = config.get('library_definitions', {}).get('test_libraries', [])
-        REFERENCE_LIBRARIES = config.get('library_definitions', {}).get('reference_libraries', [])
+        # Get library definitions from config (handle None values)
+        library_defs = config.get('library_definitions') or {}
+        TEST_LIBRARIES = library_defs.get('test_libraries') or []
+        REFERENCE_LIBRARIES = library_defs.get('reference_libraries') or []
         
+        # Get landmark treatments (may be empty in test-only mode)
         landmark_treatments = []
-        if 'is_landmark' in ref_df.columns:
+        if len(ref_df) > 0 and 'is_landmark' in ref_df.columns:
             landmark_treatments = ref_df[ref_df['is_landmark'] == True]['treatment'].tolist()
         
+        # Get valid test treatments (may be empty in reference-only mode)
         valid_test_treatments = []
-        if 'valid_for_phenotypic_makeup' in test_df.columns:
+        if len(test_df) > 0 and 'valid_for_phenotypic_makeup' in test_df.columns:
             valid_test_treatments = test_df[test_df['valid_for_phenotypic_makeup'] == True]['treatment'].tolist()
         
         relevant_landmarks = set()
-        for treatment in valid_test_treatments:
-            if treatment in test_df['treatment'].values:
-                row = test_df[test_df['treatment'] == treatment].iloc[0]
-                for landmark_col in ['closest_landmark_treatment', 'second_closest_landmark_treatment', 'third_closest_landmark_treatment']:
-                    if landmark_col in row and pd.notna(row.get(landmark_col)):
-                        landmark_treatment = row.get(landmark_col)
-                        if landmark_treatment in ordered_treatments:
-                            relevant_landmarks.add(landmark_treatment)
+        if len(test_df) > 0 and 'treatment' in test_df.columns:
+            for treatment in valid_test_treatments:
+                if treatment in test_df['treatment'].values:
+                    row = test_df[test_df['treatment'] == treatment].iloc[0]
+                    for landmark_col in ['closest_landmark_treatment', 'second_closest_landmark_treatment', 'third_closest_landmark_treatment']:
+                        if landmark_col in row and pd.notna(row.get(landmark_col)):
+                            landmark_treatment = row.get(landmark_col)
+                            if landmark_treatment in ordered_treatments:
+                                relevant_landmarks.add(landmark_treatment)
         
         splits_ordered = {
             'test_and_reference': {
@@ -418,8 +431,10 @@ class HierarchicalClusteringAnalyzer:
         logger.info("Creating chunked heatmaps...")
         
         # Get library definitions from config instead of hardcoding
-        TEST_LIBRARIES = config.get('library_definitions', {}).get('test_libraries', [])
-        REFERENCE_LIBRARIES = config.get('library_definitions', {}).get('reference_libraries', [])
+        library_defs = config.get('library_definitions') or {}
+        TEST_LIBRARIES = library_defs.get('test_libraries') or []
+        REFERENCE_LIBRARIES = library_defs.get('reference_libraries') or []
+
         
         n_treatments = len(ordered_treatments)
         n_chunks = int(np.ceil(n_treatments / chunk_size))

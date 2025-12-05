@@ -58,6 +58,9 @@ class LandmarkAnalyzer:
         self.dmso_medianoid = None
         self.dmso_threshold = None
         
+        # Analysis mode: 'both', 'reference_only', or 'test_only'
+        self.analysis_mode = None
+        
         # Results containers
         self.reference_centroids = None
         self.test_centroids = None
@@ -368,46 +371,74 @@ class LandmarkAnalyzer:
         
         logger.info(f"\nReference set: {len(self.reference_df):,} wells")
         logger.info(f"Test set: {len(self.test_df):,} wells")
+        
+        # Determine analysis mode
+        has_reference = len(self.reference_df) > 0
+        has_test = len(self.test_df) > 0
+        
+        if has_reference and has_test:
+            self.analysis_mode = 'both'
+        elif has_reference:
+            self.analysis_mode = 'reference_only'
+        elif has_test:
+            self.analysis_mode = 'test_only'
+        else:
+            raise ValueError("No reference or test data found! Check dataset_type column.")
+        
+        logger.info(f"\n*** ANALYSIS MODE: {self.analysis_mode.upper()} ***")
+        if self.analysis_mode == 'test_only':
+            logger.info("  Note: Landmarks come from reference set only")
+            logger.info("  Test-only mode will skip landmark identification")
+            logger.info("  Will use TEST DMSO for medianoid calculation")
+        elif self.analysis_mode == 'reference_only':
+            logger.info("  Note: No test compounds to evaluate against landmarks")
     
     def create_treatment_centroids(self):
         """
         Aggregate wells to treatment level using median
         
         NEW: Saves centroids to disk for resume capability
+        Handles reference-only and test-only modes
         """
         logger.info("\n" + "="*80)
         logger.info("STEP 5: CREATING TREATMENT CENTROIDS")
         logger.info("="*80)
         
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
         # Check if centroids already exist
         ref_centroid_path = self.output_dir / 'reference_centroids.parquet'
         test_centroid_path = self.output_dir / 'test_centroids.parquet'
         
-        if ref_centroid_path.exists() and test_centroid_path.exists():
-            logger.info("✓ Centroids already exist, loading from disk...")
-            self.reference_centroids = pd.read_parquet(ref_centroid_path)
-            self.test_centroids = pd.read_parquet(test_centroid_path)
-            logger.info(f"  Loaded {len(self.reference_centroids):,} reference centroids")
-            logger.info(f"  Loaded {len(self.test_centroids):,} test centroids")
-            return
+        # Handle reference centroids
+        if self.analysis_mode in ['both', 'reference_only']:
+            if ref_centroid_path.exists():
+                logger.info("✓ Reference centroids already exist, loading from disk...")
+                self.reference_centroids = pd.read_parquet(ref_centroid_path)
+                logger.info(f"  Loaded {len(self.reference_centroids):,} reference centroids")
+            else:
+                self.reference_centroids = self._create_centroids(self.reference_df, "REFERENCE")
+                self.reference_centroids.to_parquet(ref_centroid_path, index=False)
+                ref_size_mb = ref_centroid_path.stat().st_size / (1024 * 1024)
+                logger.info(f"  ✓ Saved reference_centroids.parquet ({ref_size_mb:.1f} MB)")
+        else:
+            logger.info("  Skipping reference centroids (test-only mode)")
+            self.reference_centroids = pd.DataFrame()
         
-        # Create centroids from scratch
-        self.reference_centroids = self._create_centroids(self.reference_df, "REFERENCE")
-        self.test_centroids = self._create_centroids(self.test_df, "TEST")
-        
-        # Save centroids for future resume
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        logger.info("\nSaving centroids for resume capability...")
-        self.reference_centroids.to_parquet(ref_centroid_path, index=False)
-        self.test_centroids.to_parquet(test_centroid_path, index=False)
-        
-        ref_size_mb = ref_centroid_path.stat().st_size / (1024 * 1024)
-        test_size_mb = test_centroid_path.stat().st_size / (1024 * 1024)
-        
-        logger.info(f"  ✓ Saved reference_centroids.parquet ({ref_size_mb:.1f} MB)")
-        logger.info(f"  ✓ Saved test_centroids.parquet ({test_size_mb:.1f} MB)")
-        logger.info(f"  These files allow fast resume if analysis is interrupted")
+        # Handle test centroids
+        if self.analysis_mode in ['both', 'test_only']:
+            if test_centroid_path.exists():
+                logger.info("✓ Test centroids already exist, loading from disk...")
+                self.test_centroids = pd.read_parquet(test_centroid_path)
+                logger.info(f"  Loaded {len(self.test_centroids):,} test centroids")
+            else:
+                self.test_centroids = self._create_centroids(self.test_df, "TEST")
+                self.test_centroids.to_parquet(test_centroid_path, index=False)
+                test_size_mb = test_centroid_path.stat().st_size / (1024 * 1024)
+                logger.info(f"  ✓ Saved test_centroids.parquet ({test_size_mb:.1f} MB)")
+        else:
+            logger.info("  Skipping test centroids (reference-only mode)")
+            self.test_centroids = pd.DataFrame()
     
     def _create_centroids(self, data: pd.DataFrame, label: str) -> pd.DataFrame:
         """Helper to create treatment centroids"""
@@ -554,26 +585,36 @@ class LandmarkAnalyzer:
         return metadata_dict
     
     def calculate_dmso_medianoid(self):
-        """Calculate DMSO medianoid from reference set"""
+        """Calculate DMSO medianoid from reference set (or test set in test-only mode)"""
         logger.info("\n" + "="*80)
-        logger.info("STEP 6: CALCULATING REFERENCE DMSO MEDIANOID")
+        logger.info("STEP 6: CALCULATING DMSO MEDIANOID")
         logger.info("="*80)
         
-        # Get DMSO samples from REFERENCE set only
-        reference_dmso = self.df[(self.df['dataset_type'] == 'reference') & (self.df['is_dmso'] == True)]
-        logger.info(f"Found {len(reference_dmso):,} DMSO wells in reference set")
+        # Determine which DMSO to use based on analysis mode
+        if self.analysis_mode == 'test_only':
+            # Use TEST DMSO for test-only mode
+            dmso_source = self.df[(self.df['dataset_type'] == 'test') & (self.df['is_dmso'] == True)]
+            dmso_label = "TEST"
+            logger.info("Using TEST DMSO (test-only mode)")
+        else:
+            # Use REFERENCE DMSO for reference-only or both modes
+            dmso_source = self.df[(self.df['dataset_type'] == 'reference') & (self.df['is_dmso'] == True)]
+            dmso_label = "REFERENCE"
+            logger.info("Using REFERENCE DMSO")
         
-        if len(reference_dmso) == 0:
-            raise ValueError("No DMSO samples found in reference set!")
+        logger.info(f"Found {len(dmso_source):,} DMSO wells in {dmso_label} set")
+        
+        if len(dmso_source) == 0:
+            raise ValueError(f"No DMSO samples found in {dmso_label} set!")
         
         # Calculate DMSO medianoid (median of all features across DMSO wells)
-        self.dmso_medianoid = reference_dmso[self.feature_cols].median().values
-        logger.info(f"Calculated DMSO medianoid from {len(reference_dmso)} reference DMSO wells")
+        self.dmso_medianoid = dmso_source[self.feature_cols].median().values
+        logger.info(f"Calculated DMSO medianoid from {len(dmso_source)} {dmso_label} DMSO wells")
         
         # Calculate DMSO distance threshold
-        logger.info(f"\nCalculating DMSO distance threshold from reference DMSO samples...")
+        logger.info(f"\nCalculating DMSO distance threshold from {dmso_label} DMSO samples...")
         dmso_distances = []
-        for _, row in reference_dmso.iterrows():
+        for _, row in dmso_source.iterrows():
             sample_vector = row[self.feature_cols].values
             dist = cosine(self.dmso_medianoid, sample_vector)
             dmso_distances.append(dist)
@@ -590,8 +631,19 @@ class LandmarkAnalyzer:
         logger.info("STEP 7: CALCULATING MAD (MEDIAN ABSOLUTE DEVIATION)")
         logger.info("="*80)
         
-        self.reference_mad = self._calculate_mad(self.reference_df, "REFERENCE")
-        self.test_mad = self._calculate_mad(self.test_df, "TEST")
+        # Calculate MAD for reference if we have reference data
+        if self.analysis_mode in ['both', 'reference_only']:
+            self.reference_mad = self._calculate_mad(self.reference_df, "REFERENCE")
+        else:
+            logger.info("Skipping REFERENCE MAD (test-only mode)")
+            self.reference_mad = pd.DataFrame()
+        
+        # Calculate MAD for test if we have test data
+        if self.analysis_mode in ['both', 'test_only']:
+            self.test_mad = self._calculate_mad(self.test_df, "TEST")
+        else:
+            logger.info("Skipping TEST MAD (reference-only mode)")
+            self.test_mad = pd.DataFrame()
     
     def _calculate_mad(self, data: pd.DataFrame, label: str) -> pd.DataFrame:
         """Helper to calculate MAD for treatments"""
@@ -665,8 +717,13 @@ class LandmarkAnalyzer:
         
         mad_df = pd.DataFrame(mad_results)
         logger.info(f"Calculated MAD for {len(mad_df)} {label} treatments")
-        logger.info(f"  MAD range: {mad_df['mad_cosine'].min():.4f} to {mad_df['mad_cosine'].max():.4f}")
-        logger.info(f"  Mean MAD: {mad_df['mad_cosine'].mean():.4f}")
+        
+        # Only log statistics if we have results
+        if len(mad_df) > 0 and 'mad_cosine' in mad_df.columns:
+            logger.info(f"  MAD range: {mad_df['mad_cosine'].min():.4f} to {mad_df['mad_cosine'].max():.4f}")
+            logger.info(f"  Mean MAD: {mad_df['mad_cosine'].mean():.4f}")
+        else:
+            logger.info(f"  No MAD results for {label} (no treatments with sufficient replicates)")
         
         return mad_df
     
@@ -675,24 +732,44 @@ class LandmarkAnalyzer:
         logger.info("\n" + "="*80)
         logger.info("STEP 8: CALCULATING DMSO DISTANCES")
         logger.info("="*80)
-        logger.info("NOTE: Both reference and test compounds are compared to REFERENCE DMSO medianoid")
         
-        self.reference_dmso_dist = self._calculate_dmso_distances(self.reference_centroids, "REFERENCE")
-        self.test_dmso_dist = self._calculate_dmso_distances(self.test_centroids, "TEST")
+        dmso_source = "TEST" if self.analysis_mode == 'test_only' else "REFERENCE"
+        logger.info(f"NOTE: All compounds are compared to {dmso_source} DMSO medianoid")
         
-        # IMPROVEMENT: Merge MAD and DMSO distance for each set
+        # Calculate for reference if we have reference data
+        if self.analysis_mode in ['both', 'reference_only'] and len(self.reference_centroids) > 0:
+            self.reference_dmso_dist = self._calculate_dmso_distances(self.reference_centroids, "REFERENCE")
+        else:
+            logger.info("Skipping REFERENCE DMSO distances (no reference data)")
+            self.reference_dmso_dist = pd.DataFrame()
+        
+        # Calculate for test if we have test data
+        if self.analysis_mode in ['both', 'test_only'] and len(self.test_centroids) > 0:
+            self.test_dmso_dist = self._calculate_dmso_distances(self.test_centroids, "TEST")
+        else:
+            logger.info("Skipping TEST DMSO distances (no test data)")
+            self.test_dmso_dist = pd.DataFrame()
+        
+        # Merge MAD and DMSO distance for each set
         logger.info("\nMerging MAD and DMSO distance metrics...")
-        self.reference_mad = self.reference_mad.merge(
-            self.reference_dmso_dist[['treatment', 'cosine_distance_from_dmso', 'exceeds_threshold']], 
-            on='treatment', 
-            how='outer'
-        )
-        self.test_mad = self.test_mad.merge(
-            self.test_dmso_dist[['treatment', 'cosine_distance_from_dmso', 'exceeds_threshold']], 
-            on='treatment', 
-            how='outer'
-        )
-        logger.info("Successfully merged MAD + DMSO distance into single dataframes")
+        
+        if len(self.reference_mad) > 0 and len(self.reference_dmso_dist) > 0:
+            self.reference_mad = self.reference_mad.merge(
+                self.reference_dmso_dist[['treatment', 'cosine_distance_from_dmso', 'exceeds_threshold']], 
+                on='treatment', 
+                how='outer'
+            )
+            logger.info("  Merged reference MAD + DMSO distances")
+        
+        if len(self.test_mad) > 0 and len(self.test_dmso_dist) > 0:
+            self.test_mad = self.test_mad.merge(
+                self.test_dmso_dist[['treatment', 'cosine_distance_from_dmso', 'exceeds_threshold']], 
+                on='treatment', 
+                how='outer'
+            )
+            logger.info("  Merged test MAD + DMSO distances")
+        
+        logger.info("MAD + DMSO distance merge complete")
     
     def _calculate_dmso_distances(self, centroids: pd.DataFrame, label: str) -> pd.DataFrame:
         """Helper to calculate DMSO distances"""
@@ -728,11 +805,15 @@ class LandmarkAnalyzer:
             
             dmso_dist_results.append(result)
         
-        dmso_dist_df = pd.DataFrame(dmso_dist_results).sort_values('cosine_distance_from_dmso', ascending=False)
+        dmso_dist_df = pd.DataFrame(dmso_dist_results)
         
-        logger.info(f"  Calculated distances for {len(dmso_dist_df)} treatments")
-        logger.info(f"  Distance range: {dmso_dist_df['cosine_distance_from_dmso'].min():.4f} to {dmso_dist_df['cosine_distance_from_dmso'].max():.4f}")
-        logger.info(f"  Treatments exceeding threshold: {dmso_dist_df['exceeds_threshold'].sum()}")
+        if len(dmso_dist_df) > 0:
+            dmso_dist_df = dmso_dist_df.sort_values('cosine_distance_from_dmso', ascending=False)
+            logger.info(f"  Calculated distances for {len(dmso_dist_df)} treatments")
+            logger.info(f"  Distance range: {dmso_dist_df['cosine_distance_from_dmso'].min():.4f} to {dmso_dist_df['cosine_distance_from_dmso'].max():.4f}")
+            logger.info(f"  Treatments exceeding threshold: {dmso_dist_df['exceeds_threshold'].sum()}")
+        else:
+            logger.info(f"  No treatments to calculate distances for")
         
         return dmso_dist_df
     
@@ -742,11 +823,30 @@ class LandmarkAnalyzer:
         logger.info("STEP 9: IDENTIFYING LANDMARKS FROM REFERENCE SET")
         logger.info("="*80)
         
+        # Skip landmark identification in test-only mode
+        if self.analysis_mode == 'test_only':
+            logger.info("*** SKIPPING: Test-only mode - landmarks require reference data ***")
+            logger.info("  Landmarks are identified from reference set only")
+            logger.info("  Without landmarks, nearest landmark analysis will be skipped")
+            self.landmarks = pd.DataFrame()
+            return
+        
+        # Check if we have the required data
+        if len(self.reference_mad) == 0:
+            logger.warning("No reference MAD data available for landmark identification")
+            self.landmarks = pd.DataFrame()
+            return
+        
+        if 'exceeds_threshold' not in self.reference_mad.columns:
+            logger.warning("DMSO distance threshold not available - cannot identify landmarks")
+            self.landmarks = pd.DataFrame()
+            return
+        
         logger.info(f"Landmark candidate criteria:")
         logger.info(f"  - MAD threshold: <= {self.mad_threshold}")
         logger.info(f"  - DMSO distance: > {self.dmso_threshold:.4f} (reference {self.dmso_percentile}th percentile)")
         
-        # NEW: Add is_landmark boolean column to reference_mad
+        # Add is_landmark boolean column to reference_mad
         self.reference_mad['is_landmark'] = (
             (self.reference_mad['mad_cosine'] <= self.mad_threshold) &
             (self.reference_mad['exceeds_threshold'] == True)
@@ -769,6 +869,8 @@ class LandmarkAnalyzer:
             logger.info(f"\nLandmark statistics:")
             logger.info(f"  MAD range: {self.landmarks['mad_cosine'].min():.4f} to {self.landmarks['mad_cosine'].max():.4f}")
             logger.info(f"  DMSO distance range: {self.landmarks['cosine_distance_from_dmso'].min():.4f} to {self.landmarks['cosine_distance_from_dmso'].max():.4f}")
+        else:
+            logger.warning("No landmarks identified! Check MAD/DMSO thresholds.")
     
     def find_nearest_landmarks_for_all(self):
         """Find top 3 nearest landmarks for all treatments"""
@@ -776,18 +878,35 @@ class LandmarkAnalyzer:
         logger.info("STEP 10: FINDING TOP 3 LANDMARKS")
         logger.info("="*80)
         
+        # Skip if no landmarks identified
+        if self.landmarks is None or len(self.landmarks) == 0:
+            logger.info("*** SKIPPING: No landmarks available ***")
+            logger.info("  Cannot compute nearest landmarks without landmark reference set")
+            self.reference_landmark_results = pd.DataFrame()
+            self.test_landmark_results = pd.DataFrame()
+            return
+        
         logger.info("NOTE: Excluding self-matches for reference treatments")
         
-        self.reference_landmark_results = self._find_top3_landmarks(
-            self.reference_centroids, exclude_self=True, is_reference=True
-        )
+        # Process reference treatments
+        if self.analysis_mode in ['both', 'reference_only'] and len(self.reference_centroids) > 0:
+            self.reference_landmark_results = self._find_top3_landmarks(
+                self.reference_centroids, exclude_self=True, is_reference=True
+            )
+            logger.info(f"Generated landmark distances for {len(self.reference_landmark_results)} reference treatments")
+        else:
+            logger.info("Skipping reference landmark distances (no reference data)")
+            self.reference_landmark_results = pd.DataFrame()
         
-        self.test_landmark_results = self._find_top3_landmarks(
-            self.test_centroids, exclude_self=False, is_reference=False
-        )
-        
-        logger.info(f"\nGenerated landmark distances for {len(self.reference_landmark_results)} reference treatments")
-        logger.info(f"Generated landmark distances for {len(self.test_landmark_results)} test treatments")
+        # Process test treatments
+        if self.analysis_mode in ['both', 'test_only'] and len(self.test_centroids) > 0:
+            self.test_landmark_results = self._find_top3_landmarks(
+                self.test_centroids, exclude_self=False, is_reference=False
+            )
+            logger.info(f"Generated landmark distances for {len(self.test_landmark_results)} test treatments")
+        else:
+            logger.info("Skipping test landmark distances (no test data)")
+            self.test_landmark_results = pd.DataFrame()
         
         # NEW: Log truncated columns
         logger.info(f"\n   Added truncated/derived metadata columns to all output files:")
@@ -952,62 +1071,71 @@ class LandmarkAnalyzer:
         return pd.DataFrame(results)
         
     def save_all_results(self):
-        """
-        Save all output files with resume capability
-        
-        NEW: Checks if outputs exist before creating them
-        NEW: Handles Step 13 failure gracefully
-        """
+        """Save all results to output directory"""
         logger.info("\n" + "="*80)
-        logger.info("STEP 11: SAVING OUTPUTS")
+        logger.info("STEP 11: SAVING RESULTS")
         logger.info("="*80)
+        logger.info(f"Analysis mode: {self.analysis_mode}")
         
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Output directory: {self.output_dir}")
         
-        # 1. Save landmarks (has both MAD and DMSO distance)
+        # 1. Save landmarks (only if we have them)
         landmarks_path = self.output_dir / 'cellprofiler_landmarks.csv'
-        if not landmarks_path.exists():
-            self.landmarks.to_csv(landmarks_path, index=False)
-            logger.info(f"1. Saved {len(self.landmarks)} landmarks to: {landmarks_path}")
+        if self.landmarks is not None and len(self.landmarks) > 0:
+            if not landmarks_path.exists():
+                self.landmarks.to_csv(landmarks_path, index=False)
+                logger.info(f"1. Saved landmarks to: {landmarks_path}")
+            else:
+                logger.info(f"1. ✓ Landmarks file already exists, skipping: {landmarks_path.name}")
         else:
-            logger.info(f"1. ✓ Landmarks file already exists, skipping: {landmarks_path.name}")
+            logger.info(f"1. SKIPPED: No landmarks to save (test-only mode or no landmarks identified)")
         
-        # 2. Save reference MAD + DMSO distance (merged) WITH is_landmark column
+        # 2. Save reference MAD + DMSO distance (merged)
         ref_mad_path = self.output_dir / 'reference_mad_and_dmso.csv'
-        if not ref_mad_path.exists():
-            self.reference_mad.to_csv(ref_mad_path, index=False)
-            logger.info(f"2. Saved reference MAD + DMSO distances to: {ref_mad_path}")
-            logger.info(f"    Includes 'is_landmark' boolean column")
+        if self.reference_mad is not None and len(self.reference_mad) > 0:
+            if not ref_mad_path.exists():
+                self.reference_mad.to_csv(ref_mad_path, index=False)
+                logger.info(f"2. Saved reference MAD + DMSO distances to: {ref_mad_path}")
+                if 'is_landmark' in self.reference_mad.columns:
+                    logger.info(f"    Includes 'is_landmark' boolean column")
+            else:
+                logger.info(f"2. ✓ Reference MAD file already exists, skipping: {ref_mad_path.name}")
         else:
-            logger.info(f"2. ✓ Reference MAD file already exists, skipping: {ref_mad_path.name}")
+            logger.info(f"2. SKIPPED: No reference MAD data to save (test-only mode)")
         
         # 3. Save test MAD + DMSO distance (merged)
         test_mad_path = self.output_dir / 'test_mad_and_dmso.csv'
-        if not test_mad_path.exists():
-            self.test_mad.to_csv(test_mad_path, index=False)
-            logger.info(f"3. Saved test MAD + DMSO distances to: {test_mad_path}")
+        if self.test_mad is not None and len(self.test_mad) > 0:
+            if not test_mad_path.exists():
+                self.test_mad.to_csv(test_mad_path, index=False)
+                logger.info(f"3. Saved test MAD + DMSO distances to: {test_mad_path}")
+            else:
+                logger.info(f"3. ✓ Test MAD file already exists, skipping: {test_mad_path.name}")
         else:
-            logger.info(f"3. ✓ Test MAD file already exists, skipping: {test_mad_path.name}")
+            logger.info(f"3. SKIPPED: No test MAD data to save (reference-only mode)")
         
         # 4. Save reference landmark distances (includes query metrics)
         ref_landmark_path = self.output_dir / 'reference_to_landmark_distances.csv'
-        if not ref_landmark_path.exists():
-            self.reference_landmark_results.to_csv(ref_landmark_path, index=False)
-            logger.info(f"4. Saved reference landmark distances to: {ref_landmark_path}")
+        if self.reference_landmark_results is not None and len(self.reference_landmark_results) > 0:
+            if not ref_landmark_path.exists():
+                self.reference_landmark_results.to_csv(ref_landmark_path, index=False)
+                logger.info(f"4. Saved reference landmark distances to: {ref_landmark_path}")
+            else:
+                logger.info(f"4. ✓ Reference landmark distances already exist, skipping: {ref_landmark_path.name}")
         else:
-            logger.info(f"4. ✓ Reference landmark distances already exist, skipping: {ref_landmark_path.name}")
+            logger.info(f"4. SKIPPED: No reference landmark distances (test-only mode or no landmarks)")
         
         # 5. Save test landmark distances (includes query metrics) WITH valid_for_phenotypic_makeup column
         test_landmark_path = self.output_dir / 'test_to_landmark_distances.csv'
-        if not test_landmark_path.exists():
-            self.test_landmark_results.to_csv(test_landmark_path, index=False)
-            logger.info(f"5. Saved test landmark distances to: {test_landmark_path}")
+        if self.test_landmark_results is not None and len(self.test_landmark_results) > 0:
+            if not test_landmark_path.exists():
+                self.test_landmark_results.to_csv(test_landmark_path, index=False)
+                logger.info(f"5. Saved test landmark distances to: {test_landmark_path}")
             if 'valid_for_phenotypic_makeup' in self.test_landmark_results.columns:
                 logger.info(f"    Includes 'valid_for_phenotypic_makeup' boolean column (threshold < 0.2)")
         else:
-            logger.info(f"5. ✓ Test landmark distances already exist, skipping: {test_landmark_path.name}")
-            if 'valid_for_phenotypic_makeup' in self.test_landmark_results.columns:
-                logger.info(f"    (File includes 'valid_for_phenotypic_makeup' boolean column)")
+            logger.info(f"5. SKIPPED: No test landmark distances (reference-only mode or no landmarks)")
 
         # 6. Compute and save cosine distance matrix for hierarchical clustering
         distance_matrix_path = self.output_dir / 'cosine_distance_matrix_for_clustering.parquet'
@@ -1060,8 +1188,20 @@ class LandmarkAnalyzer:
         logger.info("STEP 12: COMPUTING COSINE DISTANCE MATRIX FOR HIERARCHICAL CLUSTERING")
         logger.info("="*80)
         
-        # Combine reference and test centroids
-        all_centroids = pd.concat([self.reference_centroids, self.test_centroids], ignore_index=True)
+        # Combine available centroids based on analysis mode
+        centroids_to_combine = []
+        if self.reference_centroids is not None and len(self.reference_centroids) > 0:
+            centroids_to_combine.append(self.reference_centroids)
+            logger.info(f"Including {len(self.reference_centroids)} reference treatments")
+        if self.test_centroids is not None and len(self.test_centroids) > 0:
+            centroids_to_combine.append(self.test_centroids)
+            logger.info(f"Including {len(self.test_centroids)} test treatments")
+        
+        if len(centroids_to_combine) == 0:
+            logger.warning("No centroids available for distance matrix computation!")
+            return
+        
+        all_centroids = pd.concat(centroids_to_combine, ignore_index=True)
         logger.info(f"Total treatments for distance matrix: {len(all_centroids)}")
         
         # Filter out DMSO treatments
@@ -1442,25 +1582,52 @@ class LandmarkAnalyzer:
         logger.info("\n" + "="*80)
         logger.info("SUMMARY STATISTICS")
         logger.info("="*80)
+        logger.info(f"Analysis mode: {self.analysis_mode}")
         
-        logger.info("\nReference Statistics:")
-        logger.info(f"  Total treatments: {len(self.reference_centroids)}")
-        logger.info(f"  With MAD calculated: {len(self.reference_mad)}")
-        logger.info(f"  Landmarks identified: {len(self.landmarks)}")
-        if 'is_landmark' in self.reference_mad.columns:
-            n_landmarks = self.reference_mad['is_landmark'].sum()
-            logger.info(f"   is_landmark column: {n_landmarks} True, {len(self.reference_mad) - n_landmarks} False")
+        # Reference statistics
+        if self.analysis_mode in ['both', 'reference_only']:
+            logger.info("\nReference Statistics:")
+            logger.info(f"  Total treatments: {len(self.reference_centroids) if self.reference_centroids is not None else 0}")
+            logger.info(f"  With MAD calculated: {len(self.reference_mad) if self.reference_mad is not None else 0}")
+            n_landmarks = len(self.landmarks) if self.landmarks is not None else 0
+            logger.info(f"  Landmarks identified: {n_landmarks}")
+            
+            if len(self.reference_mad) > 0 and 'is_landmark' in self.reference_mad.columns:
+                n_landmarks = self.reference_mad['is_landmark'].sum()
+                logger.info(f"   is_landmark column: {n_landmarks} True, {len(self.reference_mad) - n_landmarks} False")
+            
+            if self.reference_landmark_results is not None and len(self.reference_landmark_results) > 0 and 'closest_landmark_distance' in self.reference_landmark_results.columns:
+                logger.info(f"  Distance to closest landmark:")
+                logger.info(f"    Mean: {self.reference_landmark_results['closest_landmark_distance'].mean():.4f}")
+                logger.info(f"    Median: {self.reference_landmark_results['closest_landmark_distance'].median():.4f}")
+                logger.info(f"    Min: {self.reference_landmark_results['closest_landmark_distance'].min():.4f}")
+                logger.info(f"    Max: {self.reference_landmark_results['closest_landmark_distance'].max():.4f}")
         
-        if len(self.reference_landmark_results) > 0 and 'closest_landmark_distance' in self.reference_landmark_results.columns:
-            logger.info(f"  Distance to closest landmark:")
-            logger.info(f"    Mean: {self.reference_landmark_results['closest_landmark_distance'].mean():.4f}")
-            logger.info(f"    Median: {self.reference_landmark_results['closest_landmark_distance'].median():.4f}")
-            logger.info(f"    Min: {self.reference_landmark_results['closest_landmark_distance'].min():.4f}")
-            logger.info(f"    Max: {self.reference_landmark_results['closest_landmark_distance'].max():.4f}")
+        # Test statistics
+        if self.analysis_mode in ['both', 'test_only']:
+            logger.info("\nTest Statistics:")
+            logger.info(f"  Total treatments: {len(self.test_centroids) if self.test_centroids is not None else 0}")
+            logger.info(f"  With MAD calculated: {len(self.test_mad) if self.test_mad is not None else 0}")
+            
+            if self.test_landmark_results is not None and len(self.test_landmark_results) > 0:
+                if 'valid_for_phenotypic_makeup' in self.test_landmark_results.columns:
+                    n_valid = self.test_landmark_results['valid_for_phenotypic_makeup'].sum()
+                    n_total = len(self.test_landmark_results)
+                    logger.info(f"   valid_for_phenotypic_makeup: {n_valid} True, {n_total - n_valid} False")
+                    logger.info(f"     ({100*n_valid/n_total:.1f}% valid for phenotypic makeup analysis)")
+                
+                if 'closest_landmark_distance' in self.test_landmark_results.columns:
+                    logger.info(f"  Distance to closest landmark:")
+                    logger.info(f"    Mean: {self.test_landmark_results['closest_landmark_distance'].mean():.4f}")
+                    logger.info(f"    Median: {self.test_landmark_results['closest_landmark_distance'].median():.4f}")
+                    logger.info(f"    Min: {self.test_landmark_results['closest_landmark_distance'].min():.4f}")
+                    logger.info(f"    Max: {self.test_landmark_results['closest_landmark_distance'].max():.4f}")
         
-        logger.info("\nTest Statistics:")
-        logger.info(f"  Total treatments: {len(self.test_centroids)}")
-        logger.info(f"  With MAD calculated: {len(self.test_mad)}")
+        # Test statistics
+        if self.analysis_mode in ['both', 'test_only']:
+            logger.info("\nTest Statistics:")
+            logger.info(f"  Total treatments: {len(self.test_centroids) if self.test_centroids is not None else 0}")
+            logger.info(f"  With MAD calculated: {len(self.test_mad) if self.test_mad is not None else 0}")
         
         if len(self.test_landmark_results) > 0:
             if 'valid_for_phenotypic_makeup' in self.test_landmark_results.columns:

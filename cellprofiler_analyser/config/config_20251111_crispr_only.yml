@@ -17,7 +17,7 @@ output_base_dir: "/nemo/project/proj-prosperity/hts/raw/projects/20251111_gsk_pr
 # ADD THE NEW SECTION HERE (at the same level as other main sections)
 skip_mode_paths:
   # Base directory of previous run
-  previous_run_base: "/path/to/previous/run"
+  previous_run_base: "/nemo/project/proj-prosperity/hts/raw/projects/20251111_gsk_prosperity_all_datasets/cellprofiler/processed_data/20251204_150736_results"
   
   # Relative paths from previous_run_base
   well_level_parquet: "data/processed_image_data_well_level.parquet"
@@ -55,16 +55,16 @@ quality_control:
 # ============================================================================
 library_definitions:
   test_libraries: 
-    - "CCA_V1"
-    - "GSK_clickable_V1" 
-    - "GSK_fragments_V3"
-    - "HTC_V1"
-    - "HTC_V2"
+    # - "CCA_V1"
+    # - "GSK_clickable_V1" 
+    # - "GSK_fragments_V3"
+    # - "HTC_V1"
+    # - "HTC_V2"
   reference_libraries:
-    - "JUMP_V1"
-    - "JUMP_V2" 
-    - "SCG_V1"
-    - "GSK_chemogenetic_V1"
+    # - "JUMP_V1"
+    # - "JUMP_V2" 
+    # - "SCG_V1"
+    # - "GSK_chemogenetic_V1"
     - "CRISPR_genome"
 
 # ============================================================================
