@@ -1009,7 +1009,8 @@ class LandmarkAnalyzer:
             # Build result
             result = {
                 'treatment': query_treatment,
-                'is_reference': is_reference
+                'is_reference': is_reference,
+                'is_self_landmark': query_treatment in landmark_embeddings
             }
             
             # IMPROVEMENT: Add ALL query metadata (not just hardcoded subset)
