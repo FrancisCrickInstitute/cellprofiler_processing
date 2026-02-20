@@ -82,21 +82,15 @@ def extract_plate_well_field_info(df: pd.DataFrame) -> pd.DataFrame:
         if pd.isna(filepath):
             return None, None, None
         
-        # Extract plate barcode (directory name before filename)
         path_parts = str(filepath).split('/')
-        plate_barcode = None
         well = None
         field = None
         
-        # Find the plate barcode (5-digit number in path)
-        for part in path_parts:
-            if part.isdigit() and len(part) >= 5:
-                plate_barcode = part
-                break
+        # Plate folder is always the direct parent of the image file
+        plate_barcode = path_parts[-2] if len(path_parts) >= 2 else None
         
         # Extract well and field from filename (format: WELL_FIELD_channel.extension)
         filename = path_parts[-1]
-        # Updated regex to capture well and field
         well_field_match = re.match(r'^([A-P][0-9]{1,2})_([0-9]{1,2})_', filename)
         if well_field_match:
             well = well_field_match.group(1)
@@ -211,6 +205,48 @@ def merge_perturbation_metadata(df: pd.DataFrame, metadata_df: Optional[pd.DataF
     df = df.merge(metadata_subset, on=merge_keys, how='left', suffixes=('', '_from_csv'))
     
     logger.info(f"Merge completed. Shape: {original_shape} -> {df.shape}")
+
+    # Resolve compound_uM source priority per row:
+    # 1. Config value (Metadata_compound_uM) - use if not null
+    # 2. CSV value (Metadata_compound_uM_from_csv) - use if config is null
+    # 3. Neither - fail with clear error
+    if 'Metadata_compound_uM_from_csv' in df.columns:
+        null_mask = df['Metadata_compound_uM'].isna()
+        n_from_config = (~null_mask).sum()
+        n_needing_csv = null_mask.sum()
+        
+        # Fill nulls from CSV
+        df.loc[null_mask, 'Metadata_compound_uM'] = df.loc[null_mask, 'Metadata_compound_uM_from_csv']
+        df.drop(columns=['Metadata_compound_uM_from_csv'], inplace=True)
+        
+        still_null = df['Metadata_compound_uM'].isna().sum()
+        
+        logger.info(f"compound_uM source resolution:")
+        logger.info(f"  From config: {n_from_config} rows")
+        logger.info(f"  From CSV:    {n_needing_csv - still_null} rows")
+        logger.info(f"  Still null:  {still_null} rows")
+        
+        # Per-plate breakdown
+        if 'Metadata_plate_barcode' in df.columns:
+            for plate, grp in df.groupby('Metadata_plate_barcode'):
+                n_null = grp['Metadata_compound_uM'].isna().sum()
+                n_total = len(grp)
+                source = "CSV" if plate in [p for p, g in df.groupby('Metadata_plate_barcode') 
+                                            if g['Metadata_compound_uM'].notna().any()] else "missing"
+                logger.info(f"  {plate}: {n_total - n_null}/{n_total} wells have concentration values")
+
+    else:
+        # No CSV column - concentration must be entirely from config
+        still_null = df['Metadata_compound_uM'].isna().sum() if 'Metadata_compound_uM' in df.columns else len(df)
+        logger.info(f"compound_uM sourced entirely from config ({still_null} null rows)")
+
+    # Final check - if all null, fail
+    if 'Metadata_compound_uM' not in df.columns or df['Metadata_compound_uM'].isna().all():
+        raise ValueError(
+            "No concentration data found from config or metadata CSV. "
+            "Either set compound_uM in your plate_dict config, or add a "
+            "'Metadata_compound_uM' column to your metadata CSV."
+        )
     
     # Verify the merge worked
     if 'Metadata_perturbation_name' in df.columns:
@@ -230,59 +266,52 @@ def merge_perturbation_metadata(df: pd.DataFrame, metadata_df: Optional[pd.DataF
 
 
 def create_treatment_column(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    NEW: Create Metadata_treatment column combining perturbation_name and compound_uM
-    
-    Args:
-        df: DataFrame with Metadata_perturbation_name and Metadata_compound_uM columns
-    
-    Returns:
-        pd.DataFrame: DataFrame with new Metadata_treatment column
-    """
     logger.info("Creating Metadata_treatment column...")
     
-    # Check if required columns exist
-    required_cols = ['Metadata_perturbation_name', 'Metadata_compound_uM']
+    required_cols = ['Metadata_perturbation_name']
     missing_cols = [col for col in required_cols if col not in df.columns]
-    
     if missing_cols:
         logger.error(f"Missing required columns for treatment creation: {missing_cols}")
         return df
     
-    # Create treatment column
+    # Determine concentration source
+    has_conc_column = 'Metadata_compound_uM' in df.columns
+    conc_is_null = has_conc_column and df['Metadata_compound_uM'].isna().all()
+    
+    if not has_conc_column or conc_is_null:
+        # No usable concentration from config - this is a dose-response experiment
+        # concentration must come from metadata CSV
+        logger.error(
+            "Metadata_compound_uM is null or missing. "
+            "For dose-response experiments where concentrations vary across wells, "
+            "you must provide a 'Metadata_compound_uM' column in your metadata CSV "
+            "with per-well concentrations. Cannot create meaningful treatment IDs without this."
+        )
+        raise ValueError(
+            "Missing concentration data. Add 'Metadata_compound_uM' to your metadata CSV."
+        )
+    
     def create_treatment(row):
         perturbation = row['Metadata_perturbation_name']
         concentration = row['Metadata_compound_uM']
         
-        # Handle missing perturbation names
-        if pd.isna(perturbation) or perturbation == '' or str(perturbation).lower() == 'nan':
+        if pd.isna(perturbation) or str(perturbation).lower() == 'nan':
             return 'nan@0.0'
+        
+        if pd.isna(concentration):
+            conc_str = '0.0'
         else:
-            # Convert concentration to string, handling potential NaN values
-            if pd.isna(concentration):
-                conc_str = '0.0'
-            else:
-                conc_str = str(float(concentration))
-            return f"{perturbation}@{conc_str}"
+            conc_str = str(float(concentration))
+        
+        return f"{perturbation}@{conc_str}"
     
-    # Apply the function to create treatment column
     df['Metadata_treatment'] = df.apply(create_treatment, axis=1)
     
-    # Debug information
     unique_treatments = df['Metadata_treatment'].nunique()
-    sample_treatments = df['Metadata_treatment'].unique()[:10]
-    
+    sample_treatments = list(df['Metadata_treatment'].unique()[:10])
     logger.info(f"✓ CREATED Metadata_treatment column successfully!")
     logger.info(f"  Total unique treatments: {unique_treatments}")
-    logger.info(f"  Sample treatments: {list(sample_treatments)}")
-    
-    # Show some examples with the source columns
-    sample_df = df[['Metadata_perturbation_name', 'Metadata_compound_uM', 'Metadata_treatment']].head(10)
-    logger.info(f"Sample treatment combinations:")
-    for idx, row in sample_df.iterrows():
-        logger.info(f"  {row['Metadata_perturbation_name']} + {row['Metadata_compound_uM']} -> {row['Metadata_treatment']}")
-        if idx >= 4:  # Show first 5 examples
-            break
+    logger.info(f"  Sample treatments: {sample_treatments}")
     
     return df
 
