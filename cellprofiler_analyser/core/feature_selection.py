@@ -67,66 +67,48 @@ class FeatureSelector:
             pd.DataFrame: Data with unwanted metadata columns removed
         """
         logger.info("Removing unwanted execution time and file path metadata columns")
-        
-        # EXACT list of metadata columns to remove
-        unwanted_metadata_columns = [
-            'Metadata_ExecutionTime_08EnhanceOrSuppressFeatures',
-            'Metadata_ExecutionTime_09MaskImage',
-            'Metadata_ExecutionTime_10IdentifyPrimaryObjects',
-            'Metadata_ExecutionTime_11EnhanceOrSuppressFeatures',
-            'Metadata_ExecutionTime_12MaskImage',
-            'Metadata_ExecutionTime_13IdentifyPrimaryObjects',
-            'Metadata_ExecutionTime_20MeasureObjectNeighbors',
-            'Metadata_ExecutionTime_21MeasureObjectNeighbors',
-            'Metadata_ExecutionTime_25MeasureObjectIntensity',
-            'Metadata_ExecutionTime_26MeasureObjectIntensity',
-            'Metadata_ExecutionTime_30MeasureGranularity',
-            'Metadata_ExecutionTime_34MeasureTexture',
-            'Metadata_FileName_AGP',
-            'Metadata_FileName_DNA',
-            'Metadata_FileName_Mito',
-            'Metadata_FileName_RNAandER',
-            'Metadata_Group_Index',
-            'Metadata_Group_Length',
-            'Metadata_Group_Number',
-            'Metadata_Height_AGP',
-            'Metadata_Height_DNA',
-            'Metadata_Height_Mito',
-            'Metadata_MD5Digest_AGP',
-            'Metadata_MD5Digest_DNA',
-            'Metadata_MD5Digest_Mito',
-            'Metadata_MD5Digest_RNAandER',
-            'Metadata_PathName_AGP',
-            'Metadata_PathName_DNA',
-            'Metadata_PathName_Mito',
-            'Metadata_PathName_RNAandER',
-            'Metadata_Scaling_AGP',
-            'Metadata_Scaling_DNA',
-            'Metadata_Scaling_Mito',
-            'Metadata_Scaling_RNAandER',
-            'Metadata_URL_AGP',
-            'Metadata_URL_DNA',
-            'Metadata_URL_Mito',
-            'Metadata_Width_AGP',
-            'Metadata_Width_DNA',
-            'Metadata_Width_Mito',
-            'Metadata_Width_RNAandER',
+
+        # Pattern-based matching — any Metadata_ column whose name contains
+        # one of these substrings will be removed, regardless of channel name.
+        # This means new channel or Image names, e.g. for 5/6/7 channel cell paint (GolgiPM, Phalloidin400LS, etc.) are caught automatically.
+        unwanted_patterns = [
+            'ExecutionTime_',   # CellProfiler timing columns
+            'FileName_',        # Image file names
+            'PathName_',        # Image file paths
+            'URL_',             # Image URLs
+            'MD5Digest_',       # Image checksums
+            'Scaling_',         # Image scaling factors
+            'Height_',          # Image dimensions
+            'Width_',           # Image dimensions
+            'Group_Index',      # CellProfiler grouping
+            'Group_Length',     # CellProfiler grouping
+            'Group_Number',     # CellProfiler grouping
+        ]
+
+        # Exact column names to always remove (not channel-dependent)
+        unwanted_exact = [
             'Metadata_field',
             'Metadata_lib_plate_order',
-            'Metadata_replicate'
+            'Metadata_replicate',
+            'Metadata_ImageNumber',
         ]
-        
-        # Find which columns actually exist in the data
-        columns_to_remove = [col for col in unwanted_metadata_columns if col in data.columns]
-        
+
+        # Build removal list using pattern matching on Metadata_ columns
+        columns_to_remove = []
+        for col in data.columns:
+            if col in unwanted_exact:
+                columns_to_remove.append(col)
+            elif col.startswith('Metadata_') and any(pat in col for pat in unwanted_patterns):
+                columns_to_remove.append(col)
+
         if columns_to_remove:
             logger.info(f"Removing {len(columns_to_remove)} unwanted metadata columns:")
             for col in columns_to_remove:
                 logger.info(f"  - {col}")
-            
+
             # Track what we're removing
             self.removed_features['unwanted_metadata_columns'] = columns_to_remove
-            
+
             data_clean = data.drop(columns=columns_to_remove)
             logger.info(f"Data shape after removal: {data_clean.shape}")
             return data_clean

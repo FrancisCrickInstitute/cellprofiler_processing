@@ -1,0 +1,158 @@
+# ============================================================================
+# INPUT FILE PATHS (moved from bash script)
+# ============================================================================
+input_files:
+  - "/nemo/project/proj-prosperity/hts/raw/projects/20260506_Joe_HTC001324_enantiopair_cell_paint_5ch/cellprofiler/output/Image.parquet"
+# ============================================================================
+# METADATA FILE PATHS (moved from bash script)
+# ============================================================================
+metadata_file: "/nemo/project/proj-prosperity/hts/raw/projects/20260506_Joe_HTC001324_enantiopair_cell_paint_5ch/data/meta_data/metadata.csv"
+# ============================================================================
+# OUTPUT DIRECTORY (moved from bash script)
+# ============================================================================
+output_dir: "/nemo/project/proj-prosperity/hts/raw/projects/20260506_Joe_HTC001324_enantiopair_cell_paint_5ch/cellprofiler/processed_data"
+output_base_dir: "/nemo/project/proj-prosperity/hts/raw/projects/20260506_Joe_HTC001324_enantiopair_cell_paint_5ch/cellprofiler/processed_data"
+
+# ADD THE NEW SECTION HERE (at the same level as other main sections)
+skip_mode_paths:
+  # Base directory of previous run
+  previous_run_base: ""
+  
+  # Relative paths from previous_run_base
+  well_level_parquet: ""
+  embedding_coordinates: ""
+
+# ============================================================================
+# ANALYSIS PARAMETERS (enhanced for consistency with SPC)
+# ============================================================================
+analysis:
+  run_landmark_analysis: false
+  run_hierarchical_clustering: false
+  hierarchical_chunk_size: 200
+  run_landmark_threshold_analysis: false
+
+# Landmark threshold analysis settings (optional - these are defaults)
+landmark_thresholds_to_analyze:
+  - 0.10
+  - 0.15
+  - 0.20
+  - 0.25
+  - 0.30
+
+# ============================================================================
+# QUALITY CONTROL THRESHOLDS
+# ============================================================================
+quality_control:
+  missing_threshold: 0.05
+  correlation_threshold: 0.95
+  high_variability_threshold: 15
+  low_variability_threshold: 0.01
+
+# ============================================================================
+# LIBRARY DEFINITIONS
+# ============================================================================
+library_definitions:
+  test_libraries: 
+   - "Actin_inhibitor_panel" # Simple analysis - just treat the actin inhibitor panel as a test library
+   - "HTC001324_enantiopair"
+
+  reference_libraries:
+
+
+# ============================================================================
+# NORMALIZATION SETTINGS
+# ============================================================================
+normalization:
+  method: "z_score"
+  normalization_type: "all_conditions"
+  control_column: "Metadata_perturbation_name"
+  control_compound: "DMSO"
+
+# ============================================================================
+# VISUALIZATION PARAMETERS (UPDATED WITH NEW FLAG)
+# ============================================================================
+visualization:
+  # NEW FLAG: Set to true to reuse existing UMAP/t-SNE coordinates from previous run
+  skip_embedding_generation: false
+  
+  # Set to false to skip histogram generation (saves time during testing/re-runs)
+  run_histograms: false
+  
+  # UMAP parameters (only used if skip_embedding_generation=false)
+  umap_parameters:
+    - name: "n15_d0.1"
+      n_neighbors: 15
+      min_dist: 0.1
+      
+    - name: "n5_d0.01" 
+      n_neighbors: 5
+      min_dist: 0.01
+      
+    - name: "n30_d0.1"
+      n_neighbors: 30
+      min_dist: 0.1
+      
+    - name: "n15_d0.01"
+      n_neighbors: 15
+      min_dist: 0.01
+      
+    - name: "n15_d0.5"
+      n_neighbors: 15
+      min_dist: 0.5
+      
+    - name: "n50_d0.1"
+      n_neighbors: 50
+      min_dist: 0.1
+
+  # t-SNE parameters (only used if skip_embedding_generation=false)
+  tsne_parameters:
+    - name: "p30"
+      perplexity: 30
+      
+    - name: "p5"
+      perplexity: 5
+      
+    - name: "p10"
+      perplexity: 10
+      
+    - name: "p50"
+      perplexity: 50
+      
+    - name: "p100"
+      perplexity: 100
+
+  # PHATE parameters (only used if skip_embedding_generation=false)
+  # knn: number of nearest neighbours for graph construction (try 5-15)
+  # decay: rate of kernel decay (try 10-40; higher = sharper transitions)
+  # t: number of diffusion steps ('auto' recommended)
+  phate_parameters:
+    - name: "knn5_decay40"
+      knn: 5
+      decay: 40
+      t: "auto"
+
+    - name: "knn10_decay40"
+      knn: 10
+      decay: 40
+      t: "auto"
+
+    - name: "knn5_decay10"
+      knn: 5
+      decay: 10
+      t: "auto"
+
+# ============================================================================
+# LANDMARK ANALYSIS
+# ============================================================================
+landmark_analysis:
+  mad_threshold: 0.20
+  dmso_percentile: 80
+  min_replicates: 2
+# Plate barcode to experimental metadata mapping
+plate_dict:
+
+  "000005": {"lib_plate_order": 1, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
+  "000006": {"lib_plate_order": 2, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
+  "000007": {"lib_plate_order": 3, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
+  "000008": {"lib_plate_order": 4, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "HTC001324_enantiopair", "type": "test"}
+

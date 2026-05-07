@@ -233,17 +233,30 @@ class VizDataExporter:
         coords_data = pd.read_csv(coords_file)
         logger.info(f"  Loaded coordinates for {len(coords_data):,} wells")
         
+        # Debug: check merge keys exist
+        has_plate = 'Metadata_plate_barcode' in coords_data.columns
+        has_well = 'Metadata_well' in coords_data.columns
+        logger.info(f"  Merge key check — Metadata_plate_barcode: {has_plate}, Metadata_well: {has_well}")
+        if has_plate:
+            logger.info(f"  Sample plate values in coords: {coords_data['Metadata_plate_barcode'].unique()[:4].tolist()}")
+        if has_well:
+            logger.info(f"  Sample well values in coords: {coords_data['Metadata_well'].unique()[:4].tolist()}")
+        logger.info(f"  Sample plate values in well_data: {well_data['Metadata_plate_barcode'].unique()[:4].tolist()}")
+        logger.info(f"  Sample well values in well_data: {well_data['Metadata_well'].unique()[:4].tolist()}")
+        
         # Identify coordinate columns (exclude PCA as requested)
         umap_cols = [col for col in coords_data.columns if col.startswith('umap_')]
         tsne_cols = [col for col in coords_data.columns if col.startswith('tsne_')]
-        
+        phate_cols = [col for col in coords_data.columns if col.startswith('phate_')]
+
         logger.info(f"  Found {len(umap_cols)} UMAP coordinate columns")
         logger.info(f"  Found {len(tsne_cols)} t-SNE coordinate columns")
+        logger.info(f"  Found {len(phate_cols)} PHATE coordinate columns")
         logger.info(f"  Excluding PCA components (not needed for viz)")
 
         # Select columns to merge
         merge_cols = ['Metadata_plate_barcode', 'Metadata_well']
-        cols_to_add = umap_cols + tsne_cols
+        cols_to_add = umap_cols + tsne_cols + phate_cols
 
         # Create merge dataframe
         coords_subset = coords_data[merge_cols + cols_to_add].copy()
@@ -251,12 +264,13 @@ class VizDataExporter:
         # Ensure consistent data types for merge
         logger.info("  Ensuring consistent data types for merge keys...")
 
-        # Convert plate_barcode to string in both dataframes
+        # Normalise plate_barcode to zero-padded 6-digit string in both dataframes
+        # coords has integers (1,2,3,4), well_data has zero-padded strings (000001 etc.)
         if 'Metadata_plate_barcode' in well_data.columns:
-            well_data['Metadata_plate_barcode'] = well_data['Metadata_plate_barcode'].astype(str)
+            well_data['Metadata_plate_barcode'] = well_data['Metadata_plate_barcode'].astype(str).str.zfill(6)
 
         if 'Metadata_plate_barcode' in coords_subset.columns:
-            coords_subset['Metadata_plate_barcode'] = coords_subset['Metadata_plate_barcode'].astype(str)
+            coords_subset['Metadata_plate_barcode'] = coords_subset['Metadata_plate_barcode'].astype(str).str.zfill(6)
 
         # Convert well to string in both dataframes  
         if 'Metadata_well' in well_data.columns:
@@ -523,7 +537,7 @@ class VizDataExporter:
         
         logger.info(f"\n  Column breakdown:")
         logger.info(f"    - Metadata columns: {len(metadata_cols)}")
+        phate_cols = [col for col in well_data.columns if col.startswith('phate_')]
         logger.info(f"    - UMAP coordinates: {len(umap_cols)}")
         logger.info(f"    - t-SNE coordinates: {len(tsne_cols)}")
-        logger.info(f"    - Landmark info: {len(landmark_cols)}")
-        logger.info(f"    - Total: {len(well_data.columns)}")
+        logger.info(f"    - PHATE coordinates: {len(phate_cols)}")

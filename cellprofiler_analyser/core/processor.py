@@ -633,23 +633,22 @@ class EnhancedCellPaintingProcessor:
             # PCA variance analysis
             self.visualizer.create_pca_variance_plot(viz_data)
             
-            # UPDATED: Create comprehensive histograms with full structure
-            logger.info("Creating comprehensive histogram structure...")
-            
-            # Prepare raw data for histograms
-            if self.processed_data is not None:
-                # Convert morar DataFrame to pandas for histograms
-                if hasattr(self.processed_data, 'to_pandas'):
-                    raw_hist_data = self.processed_data.to_pandas()
+            # Histograms (optional — controlled by run_histograms flag in config)
+            viz_flags = get_visualization_flags(self.config)
+            if viz_flags.get('run_histograms', True):
+                logger.info("Creating comprehensive histogram structure...")
+                if self.processed_data is not None:
+                    if hasattr(self.processed_data, 'to_pandas'):
+                        raw_hist_data = self.processed_data.to_pandas()
+                    else:
+                        raw_hist_data = self.processed_data
+                    logger.info("Creating comprehensive histograms (raw + normalized)...")
+                    self.visualizer.create_comprehensive_histograms(raw_hist_data, self.normalized_data)
                 else:
-                    raw_hist_data = self.processed_data
-                
-                logger.info("Creating comprehensive histograms (raw + normalized)...")
-                self.visualizer.create_comprehensive_histograms(raw_hist_data, self.normalized_data)
+                    logger.warning("No raw data available for comprehensive histograms")
+                    self.visualizer.create_split_histograms_dmso_vs_treatment(self.normalized_data)
             else:
-                logger.warning("No raw data available for comprehensive histograms")
-                # Fallback to normalized histograms only
-                self.visualizer.create_split_histograms_dmso_vs_treatment(self.normalized_data)
+                logger.info("Skipping histogram generation (run_histograms=false in config)")
             
             # Correlation heatmap
             if (hasattr(self.feature_selector, 'correlation_matrix') and
@@ -670,9 +669,17 @@ class EnhancedCellPaintingProcessor:
                 success = self.visualizer.compute_multiple_tsnes(viz_data, tsne_params)
                 if not success:
                     logger.warning("t-SNE computation failed")
-            
+
+            # PHATE embeddings
+            from ..io.config_loader import get_phate_parameters
+            phate_params = get_phate_parameters(self.config)
+            if phate_params:
+                success = self.visualizer.compute_multiple_phates(viz_data, phate_params)
+                if not success:
+                    logger.warning("PHATE computation failed or skipped")
+
             # Use coordinate-based plotting approach
-            if self.visualizer.umap_results or self.visualizer.tsne_results:
+            if self.visualizer.umap_results or self.visualizer.tsne_results or self.visualizer.phate_results:
                 logger.info("Creating optimized interactive plots from coordinates...")
                 # This will save coordinates and create plots from them
                 self.visualizer.save_interactive_plots(viz_data)
@@ -1177,25 +1184,17 @@ class EnhancedCellPaintingProcessor:
 
             # Reinitialize visualizer with new output directory
             self.visualizer = DataVisualizer(self.output_dir)
-            
-            # Initialize visualizer and recreate plots
-            from .visualization import DataVisualizer
-            
-            visualizer = DataVisualizer(
-                output_dir=self.output_dir,
-                config=self.config
-            )
-            
+
             # Copy coordinates to new output directory
             viz_dir = self.output_dir / "visualizations" / "coordinates"
             viz_dir.mkdir(parents=True, exist_ok=True)
-            
+
             import shutil
             shutil.copy2(coords_path, viz_dir / "embedding_coordinates.csv")
-            
+
             # Recreate plots from coordinates
             logger.info("\nRegenerating plots from saved coordinates...")
-            success = visualizer.recreate_plots_from_coordinates(str(viz_dir))
+            success = self.visualizer.recreate_plots_from_coordinates(use_pca_from_analysis=False)
             
             if success:
                 logger.info(f"\n✓ Plots regenerated successfully!")
@@ -1266,7 +1265,7 @@ class EnhancedCellPaintingProcessor:
             logger.warning("="*80)
             run_landmark_analysis = True
         
-        if run_landmark_threshold_analysis and not run_landmark_analysis:
+        if should_run_threshold_analysis and not run_landmark_analysis:
             logger.warning("="*80)
             logger.warning("⚠️  FLAG CONFLICT DETECTED")
             logger.warning("="*80)

@@ -240,6 +240,21 @@ def merge_perturbation_metadata(df: pd.DataFrame, metadata_df: Optional[pd.DataF
         still_null = df['Metadata_compound_uM'].isna().sum() if 'Metadata_compound_uM' in df.columns else len(df)
         logger.info(f"compound_uM sourced entirely from config ({still_null} null rows)")
 
+    # nM fallback: if compound_uM is still null for some rows but compound_nM exists, convert
+    if 'Metadata_compound_nM' in df.columns:
+        if 'Metadata_compound_uM' not in df.columns:
+            df['Metadata_compound_uM'] = np.nan
+        null_um_mask = df['Metadata_compound_uM'].isna()
+        n_null_before = null_um_mask.sum()
+        if n_null_before > 0:
+            nm_numeric = pd.to_numeric(df.loc[null_um_mask, 'Metadata_compound_nM'], errors='coerce')
+            df.loc[null_um_mask, 'Metadata_compound_uM'] = nm_numeric / 1000.0
+            n_filled = df.loc[null_um_mask, 'Metadata_compound_uM'].notna().sum()
+            logger.info(
+                f"nM fallback: converted {n_filled}/{n_null_before} null compound_uM values "
+                f"from Metadata_compound_nM (÷ 1000)"
+            )
+
     # Final check - if all null, fail
     if 'Metadata_compound_uM' not in df.columns or df['Metadata_compound_uM'].isna().all():
         raise ValueError(

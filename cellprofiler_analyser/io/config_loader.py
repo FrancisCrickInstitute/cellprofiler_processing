@@ -185,6 +185,29 @@ def get_viz_parameters(config: Optional[Dict[str, Any]]) -> Tuple[list, list]:
     
     return umap_params, tsne_params
 
+def get_phate_parameters(config: Optional[Dict[str, Any]]) -> list:
+    """
+    Extract PHATE parameters from unified config.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        list: PHATE parameter sets (empty list if PHATE not configured or disabled)
+    """
+    if config is None or 'visualization' not in config:
+        return []
+
+    viz_config = config['visualization']
+    phate_params = viz_config.get('phate_parameters', [])
+
+    if phate_params:
+        logger.info(f"Found {len(phate_params)} PHATE parameter sets in config")
+    else:
+        logger.info("No phate_parameters in config — PHATE will be skipped")
+
+    return phate_params
+
 
 # Deprecated functions for backward compatibility
 def load_viz_config(viz_config_file: Optional[str]) -> Optional[Dict[str, Any]]:
@@ -322,7 +345,8 @@ def get_visualization_flags(config: Optional[Dict[str, Any]]) -> Dict[str, bool]
     """
     defaults = {
         'skip_embedding_generation': False,
-        'reuse_existing_coordinates': False  # Alternative name, same meaning
+        'reuse_existing_coordinates': False,  # Alternative name, same meaning
+        'run_histograms': True,
     }
     
     if config is None:
@@ -349,5 +373,6 @@ def get_visualization_flags(config: Optional[Dict[str, Any]]) -> Dict[str, bool]
     if flags['reuse_existing_coordinates']:
         flags['skip_embedding_generation'] = True
     
-    logger.info(f"Visualization flags: skip_embedding_generation={flags['skip_embedding_generation']}")
+    logger.info(f"Visualization flags: skip_embedding_generation={flags['skip_embedding_generation']}, "
+                f"run_histograms={flags['run_histograms']}")
     return flags

@@ -21,6 +21,11 @@ try:
 except ImportError:
     umap = None
 
+try:
+    import phate
+except ImportError:
+    phate = None
+
 # Plotting
 try:
     import plotly.graph_objects as go
@@ -88,13 +93,17 @@ class DataVisualizer:
         self.viz_redo_dir = self.output_dir / "visualizations_redo"
         self.umap_redo_dir = self.viz_redo_dir / "umap"
         self.tsne_redo_dir = self.viz_redo_dir / "tsne"
-        
+        self.phate_dir = self.viz_dir / "phate"
+        self.phate_interactive_dir = self.phate_dir / "interactive"
+        self.phate_redo_dir = self.viz_redo_dir / "phate"
+
         # Create all directories
         for directory in [
             self.analysis_dir, self.pca_dir, self.correlation_dir, self.histograms_dir,
             self.viz_dir, self.umap_dir, self.umap_interactive_dir,
             self.tsne_dir, self.tsne_interactive_dir, self.coords_dir,
-            self.viz_redo_dir, self.umap_redo_dir, self.tsne_redo_dir
+            self.viz_redo_dir, self.umap_redo_dir, self.tsne_redo_dir,
+            self.phate_dir, self.phate_interactive_dir, self.phate_redo_dir
         ]:
             directory.mkdir(parents=True, exist_ok=True)
         
@@ -103,6 +112,7 @@ class DataVisualizer:
         self.pca_feature_names = None
         self.umap_results = {}
         self.tsne_results = {}
+        self.phate_results = {}
         self.correlation_matrix = None
         
         # Essential metadata columns for visualization plots - UPDATED to include Metadata_treatment
@@ -512,7 +522,32 @@ class DataVisualizer:
                             
                     except Exception as e:
                         logger.error(f"Error creating t-SNE plot for {metadata_col}: {e}")
-                        
+
+            # Create PHATE plots
+            phate_coord_cols = [col for col in coord_data.columns if col.startswith('phate_') and col.endswith(('_x', '_y'))]
+            phate_params = set()
+            for col in phate_coord_cols:
+                if col.endswith('_x'):
+                    phate_params.add(col[6:-2])  # strip 'phate_' prefix and '_x' suffix
+
+            logger.info(f"Found PHATE parameters: {list(phate_params)}")
+
+            for param_name in phate_params:
+                logger.info(f"Creating PHATE plots for {param_name}...")
+                for metadata_col in viz_metadata_cols:
+                    try:
+                        fig = self.create_categorical_plot_from_coordinates(
+                            coord_data, metadata_col, "PHATE", param_name
+                        )
+                        if fig is not None:
+                            safe_col = metadata_col.replace('Metadata_', '').replace(' ', '_').replace('/', '_')
+                            plot_path = self.phate_interactive_dir / f"phate_{param_name}_{safe_col}.html"
+                            fig.write_html(str(plot_path))
+                            logger.info(f"Created PHATE plot: {plot_path.name}")
+                            total_plots_created += 1
+                    except Exception as e:
+                        logger.error(f"Error creating PHATE plot for {metadata_col}: {e}")
+
         except Exception as e:
             logger.error(f"Error processing coordinate file {coord_file}: {e}")
             return False
@@ -595,7 +630,26 @@ class DataVisualizer:
                         
                 except Exception as e:
                     logger.error(f"Error creating t-SNE plot for {metadata_col}: {e}")
-        
+
+        # Process PHATE coordinates
+        for param_name, coord_info in coordinates.get('phate', {}).items():
+            coord_data = coord_info['data']
+            logger.info(f"Recreating PHATE plots for {param_name}...")
+            viz_metadata_cols = [col for col in self.essential_viz_metadata_cols if col in coord_data.columns]
+            for metadata_col in viz_metadata_cols:
+                try:
+                    fig = self.create_categorical_plot_from_coordinates(
+                        coord_data, metadata_col, "phate", param_name
+                    )
+                    if fig is not None:
+                        safe_col = metadata_col.replace('Metadata_', '').replace(' ', '_').replace('/', '_')
+                        plot_path = self.phate_redo_dir / f"phate_{param_name}_{safe_col}.html"
+                        fig.write_html(str(plot_path))
+                        logger.info(f"Created PHATE plot: {plot_path.name}")
+                        total_plots_created += 1
+                except Exception as e:
+                    logger.error(f"Error creating PHATE plot for {metadata_col}: {e}")
+
         # NEW: Skip hierarchical clustering recreation - using pre-computed matrices instead
         logger.info("Skipping hierarchical clustering recreation")
         logger.info("Use HierarchicalClusteringAnalyzer with pre-computed matrices for hierarchical clustering")
@@ -664,8 +718,9 @@ class DataVisualizer:
             pca = PCA(n_components=max_components)
             pca.fit(feature_data)
             
-            # Store PCA model
+            # Store PCA model and feature names for reuse in embedding methods
             self.pca_model = pca
+            self.pca_feature_names = list(feature_data.columns)
             
             # Get variance explained
             pca_var = pca.explained_variance_ratio_
@@ -1040,6 +1095,31 @@ class DataVisualizer:
             logger.warning(f"Could not create normalized histogram plots: {e}")
 
     
+    def _get_pca_reduced_data(self, feature_data: pd.DataFrame, n_components: int = 50) -> np.ndarray:
+        """
+        Return PCA-reduced feature matrix, reusing self.pca_model if already fitted.
+        Falls back to fitting a fresh PCA if no model is available.
+        """
+        if self.pca_model is not None:
+            logger.info(f"Reusing existing PCA model ({self.pca_model.n_components_} components) for embedding")
+            # Align columns: drop any features the PCA wasn't trained on
+            if self.pca_feature_names is not None:
+                missing = set(self.pca_feature_names) - set(feature_data.columns)
+                extra = set(feature_data.columns) - set(self.pca_feature_names)
+                if missing:
+                    logger.warning(f"  {len(missing)} features missing vs PCA training set — filling with 0")
+                    for col in missing:
+                        feature_data[col] = 0.0
+                if extra:
+                    logger.info(f"  Dropping {len(extra)} extra features not seen during PCA fitting")
+                feature_data = feature_data[self.pca_feature_names]
+            return self.pca_model.transform(feature_data)
+        else:
+            actual_components = min(n_components, feature_data.shape[1])
+            logger.info(f"No existing PCA model — fitting fresh PCA ({actual_components} components)")
+            pca = PCA(n_components=actual_components)
+            return pca.fit_transform(feature_data)
+
     def compute_multiple_umaps(self, data: pd.DataFrame, umap_params_list: List[Dict]) -> bool:
         """
         Compute multiple UMAP embeddings with different parameters
@@ -1064,12 +1144,9 @@ class DataVisualizer:
             logger.info(f"Removing {len(constant_features)} constant features for UMAP")
             feature_data = feature_data.drop(columns=constant_features)
         
-        # Apply PCA if needed
+        # Apply PCA if needed (reuses self.pca_model if already fitted)
         if feature_data.shape[1] > 50:
-            pca_components = min(50, feature_data.shape[1])
-            logger.info(f"Applying PCA with {pca_components} components before UMAP")
-            pca = PCA(n_components=pca_components)
-            feature_data_pca = pca.fit_transform(feature_data)
+            feature_data_pca = self._get_pca_reduced_data(feature_data, n_components=50)
         else:
             feature_data_pca = feature_data.values
         
@@ -1113,12 +1190,9 @@ class DataVisualizer:
             logger.info(f"Removing {len(constant_features)} constant features for t-SNE")
             feature_data = feature_data.drop(columns=constant_features)
         
-        # Apply PCA if needed
+        # Apply PCA if needed (reuses self.pca_model if already fitted)
         if feature_data.shape[1] > 50:
-            pca_components = min(50, feature_data.shape[1])
-            logger.info(f"Applying PCA with {pca_components} components before t-SNE")
-            pca = PCA(n_components=pca_components)
-            feature_data_pca = pca.fit_transform(feature_data)
+            feature_data_pca = self._get_pca_reduced_data(feature_data, n_components=50)
         else:
             feature_data_pca = feature_data.values
         
@@ -1140,6 +1214,71 @@ class DataVisualizer:
             logger.info(f"t-SNE {name} completed in {elapsed:.1f} seconds")
         
         return True
+    
+
+    def compute_multiple_phates(self, data: pd.DataFrame, phate_params_list: list) -> bool:
+        """
+        Compute multiple PHATE embeddings with different parameters.
+
+        PHATE (Potential of Heat-diffusion for Affinity-based Trajectory Embedding)
+        captures continuous manifold structure and is particularly effective for
+        dose-response data where compounds form concentration gradients.
+
+        Requires: pip install phate
+        """
+        if phate is None:
+            logger.error("phate package not available. Install with: pip install phate")
+            return False
+
+        if not phate_params_list:
+            logger.info("No PHATE parameter sets provided — skipping PHATE")
+            return True
+
+        logger.info(f"Computing {len(phate_params_list)} PHATE embeddings...")
+
+        if data is None:
+            logger.error("No data available for PHATE")
+            return False
+
+        feature_cols = [col for col in data.columns if not col.startswith('Metadata_')]
+        feature_data = data[feature_cols]
+
+        # Remove constant features
+        constant_features = feature_data.columns[feature_data.std() == 0]
+        if len(constant_features) > 0:
+            logger.info(f"Removing {len(constant_features)} constant features for PHATE")
+            feature_data = feature_data.drop(columns=constant_features)
+
+        # PCA pre-processing helps with high-dimensional Cell Painting data
+        # Use more components for PHATE than UMAP/t-SNE as it benefits from richer input
+        if feature_data.shape[1] > 100:
+            feature_data_reduced = self._get_pca_reduced_data(feature_data, n_components=100)
+        else:
+            feature_data_reduced = feature_data.values
+
+        for params in phate_params_list:
+            name = params['name']
+            logger.info(f"Computing PHATE with parameters: {name}")
+            start_time = time.time()
+            try:
+                phate_op = phate.PHATE(
+                    n_components=2,
+                    knn=params.get('knn', 5),
+                    decay=params.get('decay', 40),
+                    t=params.get('t', 'auto'),
+                    gamma=params.get('gamma', 1),
+                    random_state=42,
+                    verbose=False,
+                    n_jobs=-1,
+                )
+                self.phate_results[name] = phate_op.fit_transform(feature_data_reduced)
+                elapsed = time.time() - start_time
+                logger.info(f"PHATE {name} completed in {elapsed:.1f}s")
+            except Exception as e:
+                logger.error(f"PHATE {name} failed: {e}")
+
+        return len(self.phate_results) > 0
+
     
     def save_all_coordinates_to_single_file(self, data: pd.DataFrame) -> Optional[Path]:
         """
@@ -1243,7 +1382,13 @@ class DataVisualizer:
                 coords_data[f'tsne_{name}_x'] = embedding[:, 0]
                 coords_data[f'tsne_{name}_y'] = embedding[:, 1]
             logger.info(f"Added {len(self.tsne_results)} t-SNE embedding coordinate pairs")
-            
+
+            # Add all PHATE coordinates with prefixed names
+            for name, embedding in self.phate_results.items():
+                coords_data[f'phate_{name}_x'] = embedding[:, 0]
+                coords_data[f'phate_{name}_y'] = embedding[:, 1]
+            logger.info(f"Added {len(self.phate_results)} PHATE embedding coordinate pairs")
+
             # Create dataframe from dictionary (avoids fragmentation)
             coords_df = pd.DataFrame(coords_data)
             
@@ -1342,11 +1487,30 @@ class DataVisualizer:
                         'data': coord_data
                     }
                     logger.info(f"Loaded t-SNE {param_name}: {embedding.shape}")
-            
+
+            # Extract PHATE parameter names and load coordinates
+            phate_coord_cols = [col for col in coord_data.columns if col.startswith('phate_') and col.endswith(('_x', '_y'))]
+            phate_params_found = set()
+            for col in phate_coord_cols:
+                if col.endswith('_x'):
+                    phate_params_found.add(col.replace('phate_', '').replace('_x', ''))
+
+            coordinates['phate'] = {}
+            for param_name in phate_params_found:
+                x_col = f'phate_{param_name}_x'
+                y_col = f'phate_{param_name}_y'
+                if x_col in coord_data.columns and y_col in coord_data.columns:
+                    embedding = coord_data[[x_col, y_col]].values
+                    coordinates['phate'][param_name] = {
+                        'embedding': embedding,
+                        'data': coord_data
+                    }
+                    logger.info(f"Loaded PHATE {param_name}: {embedding.shape}")
+
         except Exception as e:
             logger.error(f"Error loading coordinates from {coord_file}: {e}")
         
-        total_loaded = len(coordinates['umap']) + len(coordinates['tsne'])
+        total_loaded = len(coordinates['umap']) + len(coordinates['tsne']) + len(coordinates.get('phate', {}))
         logger.info(f"Successfully loaded {total_loaded} embedding coordinate sets from single file")
         
         return coordinates
