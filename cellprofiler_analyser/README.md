@@ -29,12 +29,18 @@ See `environment.yml` for complete package requirements.
 - `pandas`, `numpy`, `scikit-learn`, `scipy`, `pyyaml`, `tqdm`
 - `plotly`, `matplotlib`, `seaborn`, `umap-learn`
 - `morar` (for Z-score normalization)
+- `phate` (optional, for PHATE dimensionality reduction)
 
 ## Installation
 
 ```bash
 conda env create -f environment.yml
 conda activate cellprofiler_analysis
+```
+
+**Optional: PHATE support**
+```bash
+pip install phate
 ```
 
 ## Quick Start
@@ -79,8 +85,8 @@ The pipeline supports **three entry points** for different use cases:
 | Feature                     | full Mode              | well Mode              | replot Mode            |
 |-----------------------------|------------------------|------------------------|------------------------|
 | Raw data processing         | ✓ Always               | ✗ Skipped              | ✗ Skipped              |
-| UMAP/t-SNE computation      | ✓ or skip (YAML)       | ✓ or skip (YAML)       | ✗ Skipped              |
-| UMAP/t-SNE plotting         | ✓ (note 1)             | ✓ or skip (YAML)       | ✓ From coordinates     |
+| UMAP/t-SNE/PHATE computation| ✓ or skip (YAML)       | ✓ or skip (YAML)       | ✗ Skipped              |
+| UMAP/t-SNE/PHATE plotting   | ✓ (note 1)             | ✓ or skip (YAML)       | ✓ From coordinates     |
 | Landmark analysis           | Optional (YAML)        | Optional (YAML)        | ✗ NOT regenerated      |
 | Hierarchical clustering     | Optional (note 2)      | Optional (note 2)      | ✗ NOT regenerated      |
 | Landmark threshold analysis | Optional (note 2)      | Optional (note 2)      | ✗ NOT regenerated      |
@@ -92,7 +98,7 @@ The pipeline supports **three entry points** for different use cases:
 - Threshold analysis requires landmark analysis (auto-enabled if needed) **[note 2]**
 - `skip_embedding_generation` requires previous run coordinates
 - replot mode requires previous run with embedding coordinates
-- In full mode, UMAP/t-SNE plotting only runs when computation is enabled **[note 1]** (no previous coordinates available if computation is skipped)
+- In full mode, UMAP/t-SNE/PHATE plotting only runs when computation is enabled **[note 1]** (no previous coordinates available if computation is skipped)
 
 ### Mode 1: Full Pipeline
 Complete analysis from raw CellProfiler data.
@@ -119,7 +125,7 @@ sbatch submit.sh well /path/to/previous/run
 - Iterating on clustering settings
 
 ### Mode 3: Replot Only
-Regenerate UMAP/t-SNE plots from existing coordinates.
+Regenerate UMAP/t-SNE/PHATE plots from existing coordinates.
 
 ```bash
 sbatch submit.sh replot /path/to/previous/run
@@ -172,7 +178,11 @@ Perturbation metadata with **required** columns:
 - `Metadata_lib_plate_order` - Plate library identifier
 - `Metadata_well` - Well position (e.g., A01, B12)
 - `Metadata_perturbation_name` - Treatment/compound name
-- `Metadata_compound_uM` - Concentration in micromolar
+- `Metadata_compound_uM` - Concentration in micromolar (or `Metadata_compound_nM` — see note below)
+
+**Concentration columns:**
+- `Metadata_compound_uM` — preferred. If null, the pipeline will automatically fall back to `Metadata_compound_nM` (dividing by 1000 to convert to µM).
+- Both columns can coexist in the CSV; per-row priority is: config value → `compound_uM` from CSV → `compound_nM` from CSV ÷ 1000.
 
 **Optional but useful columns:**
 - `Metadata_PP_ID` - Compound identifier
@@ -245,9 +255,12 @@ normalization:
 # VISUALIZATION PARAMETERS
 # ============================================================================
 visualization:
-  # Set to true to reuse existing UMAP/t-SNE coordinates from previous run
+  # Set to true to reuse existing UMAP/t-SNE/PHATE coordinates from previous run
   # Only works in 'well' mode - requires embedding_coordinates from previous run
   skip_embedding_generation: false
+
+  # Set to false to skip histogram generation (saves time during testing)
+  run_histograms: true
   
   umap_parameters:
     - name: "n15_d0.1"
@@ -265,6 +278,26 @@ visualization:
       perplexity: 30
     - name: "p50"
       perplexity: 50
+
+  # PHATE parameters (optional - requires: pip install phate)
+  # PHATE is particularly effective for dose-response data where compounds
+  # form concentration gradients — it preserves continuous manifold structure.
+  # knn: number of nearest neighbours for graph construction (try 5-15)
+  # decay: rate of kernel decay (try 10-40; higher = sharper transitions)
+  # t: number of diffusion steps ('auto' recommended)
+  phate_parameters:
+    - name: "knn5_decay40"
+      knn: 5
+      decay: 40
+      t: "auto"
+    - name: "knn10_decay40"
+      knn: 10
+      decay: 40
+      t: "auto"
+    - name: "knn5_decay10"
+      knn: 5
+      decay: 10
+      t: "auto"
 
 # ============================================================================
 # LIBRARY DEFINITIONS (for landmark analysis)
@@ -313,17 +346,21 @@ The pipeline follows this order (in **full mode**):
 3. Extract plate/well/field from file paths
 4. Map plate metadata using `plate_dict`
 5. Merge perturbation metadata from CSV
-6. Create `Metadata_treatment` column (perturbation_name @ compound_uM)
-7. Create `Metadata_PP_ID_uM` column (if PP_ID available)
+6. Resolve concentration: config → `compound_uM` CSV → `compound_nM` CSV ÷ 1000
+7. Create `Metadata_treatment` column (perturbation_name @ compound_uM)
+8. Create `Metadata_PP_ID_uM` column (if PP_ID available)
 
 ### Step 2: Feature Selection (Image-level)
 Starting features: ~1,800 → Target: ~500-800
 
 **Removed features:**
+- Technical metadata columns (pattern-based: `ExecutionTime_`, `FileName_`, `PathName_`, `URL_`, `MD5Digest_`, `Scaling_`, `Height_`, `Width_`, `Group_*`, `ImageNumber`)
 - Missing values (>5% default)
 - Blacklisted patterns (Location, Count, Edge, ExecutionTime)
 - High correlation (>0.95 default)
 - Low/high variance outliers
+
+**Note:** Technical column removal uses pattern matching, not exact names — new imaging channels are handled automatically without config changes.
 
 ### Step 3: Z-score Normalization (Image-level)
 Normalization performed **plate-wise**.
@@ -343,13 +380,15 @@ z_score = (value - all_mean_per_plate) / all_std_per_plate
 - Reduces ~100,000s images → ~10,000s wells
 
 ### Step 5: Dimensionality Reduction
-- **PCA** - ~50 components explaining >80% variance
+- **PCA** - ~50 components explaining >80% variance (fitted once, reused across all embedding methods)
 - **UMAP** - Multiple parameter sets from config
 - **t-SNE** - Multiple parameter sets from config
+- **PHATE** - Multiple parameter sets from config (optional, requires `pip install phate`)
 
 ### Step 6: Visualization Generation
-- Interactive Plotly HTML plots
-- Coordinates saved to CSV for fast replotting
+- Interactive Plotly HTML plots for UMAP, t-SNE, and PHATE
+- Coordinates saved to single CSV for fast replotting
+- Histograms of raw and normalized feature distributions (can be disabled with `run_histograms: false`)
 
 ### Step 7: Landmark Analysis (if enabled)
 - Identify landmark compounds from reference plates
@@ -360,7 +399,7 @@ z_score = (value - all_mean_per_plate) / all_std_per_plate
 - Creates multi-page PDF heatmaps
 
 ### Step 9: Visualization Export
-- Creates `cp_for_viz_app.csv` with metadata + coordinates + landmark info
+- Creates `cp_for_viz_app.csv` with metadata + UMAP + t-SNE + PHATE coordinates + landmark info
 
 ---
 
@@ -481,19 +520,21 @@ output_dir/YYYYMMDD_HHMMSS_results/
 │   ├── correlation/
 │   │   ├── correlation_heatmap_all_features.png
 │   │   └── correlation_matrix.csv
-│   └── histograms/
+│   └── histograms/                     # Only generated if run_histograms: true
 │       ├── normalized/
 │       └── raw/
 │
 ├── visualizations/
 │   ├── umap/interactive/*.html
 │   ├── tsne/interactive/*.html
+│   ├── phate/interactive/*.html        # If phate_parameters configured
 │   └── coordinates/
-│       └── embedding_coordinates.csv
+│       └── embedding_coordinates.csv   # UMAP + t-SNE + PHATE + PCA coordinates
 │
 ├── visualizations_redo/                # Regenerated plots (well/replot modes)
 │   ├── umap/
-│   └── tsne/
+│   ├── tsne/
+│   └── phate/                          # If phate_parameters configured
 │
 ├── landmark_analysis/                  # If enabled
 │   ├── cellprofiler_landmarks.csv
@@ -538,7 +579,6 @@ output_dir/YYYYMMDD_HHMMSS_results/
 │   └── threshold_counts_per_treatment.csv
 │
 └── comprehensive_summary.txt
-```
 ```
 
 ---
@@ -628,10 +668,24 @@ python -m cellprofiler_analyser.main \
 pip install morar
 ```
 
+### "phate package not found"
+```bash
+pip install phate
+```
+PHATE is optional — the pipeline will skip PHATE embeddings if the package is not installed and no `phate_parameters` are configured. If `phate_parameters` are present in the config but the package is missing, a warning is logged and PHATE is skipped gracefully.
+
 ### "Missing required columns in metadata"
 Your metadata CSV must have:
 - `Metadata_lib_plate_order`
 - `Metadata_well`
+
+### Concentration column missing / all null
+The pipeline resolves concentration in this priority order per row:
+1. `compound_uM` from `plate_dict` in config
+2. `Metadata_compound_uM` from metadata CSV
+3. `Metadata_compound_nM` from metadata CSV ÷ 1000
+
+If all three are null, the pipeline will raise an error. Ensure at least one concentration source is populated.
 
 ### Landmark analysis failed
 Ensure your config has `type: "reference"` and `type: "test"` for appropriate plates.
@@ -645,13 +699,20 @@ Increase SLURM memory:
 #SBATCH --mem=1024G
 ```
 
-### No UMAP/t-SNE plots generated
+### No UMAP/t-SNE/PHATE plots generated
 - In **full mode**: Check that `skip_embedding_generation` is false
 - In **well mode**: Ensure coordinates file exists in previous run
 - Check logs for errors in `recreate_plots_from_coordinates()`
+- For PHATE specifically: confirm `pip install phate` has been run in your conda environment
+
+### Coordinate merge 0% match in viz export
+This usually means plate barcodes differ in format between `embedding_coordinates.csv` and the well-level parquet. The pipeline normalises both sides to zero-padded 6-digit strings — if your barcodes are longer than 6 digits they pass through unchanged. Check that plate barcodes in `plate_dict` exactly match those extracted from your file paths.
 
 ### Hierarchical clustering not running
 Requires `run_landmark_analysis: true` in config (clustering depends on landmark distance matrices).
+
+### Histograms taking too long
+Set `run_histograms: false` in the `visualization:` section of your config to skip all histogram generation.
 
 ---
 
@@ -662,8 +723,8 @@ Requires `run_landmark_analysis: true` in config (clustering depends on landmark
 | Input | ~100,000 images across 10+ plates |
 | Feature selection | 1,800 → 650 features |
 | Well aggregation | 100,000 images → ~4,000 wells |
-| Dimensionality reduction | PCA (50) + UMAP + t-SNE |
-| Output | ~50 interactive HTML plots |
+| Dimensionality reduction | PCA (50) + UMAP + t-SNE + PHATE (optional) |
+| Output | ~50-80 interactive HTML plots |
 | Time (full mode) | ~2-4 hours on HPC (512GB RAM) |
 | Time (well mode) | ~30-60 minutes |
 | Time (replot mode) | ~5-10 minutes |
@@ -681,6 +742,7 @@ Requires `run_landmark_analysis: true` in config (clustering depends on landmark
 
 ## Version History
 
+- **v2.1** - PHATE dimensionality reduction, pattern-based feature column removal, nM→µM concentration fallback, histogram toggle flag, bug fixes (PCA reuse, viz export coordinate merge, replot mode)
 - **v2.0** - Three-mode pipeline (full/well/replot), unified YAML config, landmark threshold analysis
 - **v1.0** - Initial release with basic processing and clustering
 
