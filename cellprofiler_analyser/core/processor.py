@@ -1500,7 +1500,7 @@ class EnhancedCellPaintingProcessor:
                 reference_mad_path=reference_mad_path,
                 test_landmark_path=test_landmark_path,
                 config=self.config,  # ← ADD THIS LINE
-                chunk_size=200
+                chunk_size=self.config.get('analysis', {}).get('hierarchical_chunk_size', 200)
             )
             
             if success:

@@ -166,18 +166,28 @@ class HierarchicalClusteringAnalyzer:
         for _, row in metadata_df.iterrows():
             treatment = row.get('Metadata_treatment', '')
             library = row.get('Metadata_library')
-            concentration = row.get('Metadata_compound_uM', '')
-            
+
             libraries.append(library)
-            
-            if pd.isna(concentration) or concentration == '':
+
+            # Prefer nM directly; fall back to uM × 1000; fall back to parsing treatment string
+            nm_val = row.get('Metadata_compound_nM', None)
+            um_val = row.get('Metadata_compound_uM', None)
+
+            if pd.notna(nm_val) and nm_val != '':
+                concentration = nm_val
+                conc_unit = "nM"
+            elif pd.notna(um_val) and um_val != '':
+                concentration = float(um_val) * 1000
+                conc_unit = "nM"
+            else:
                 conc_match = re.search(r'@([0-9]+\.?[0-9]*)$', str(treatment))
                 concentration = conc_match.group(1) if conc_match else "0.0"
+                conc_unit = "nM"
             
             if pd.notna(library) and library in TEST_LIBRARIES:
                 pp_id = row.get('Metadata_PP_ID', '')
                 if pd.notna(pp_id) and pp_id != '':
-                    label = f"{pp_id}@{concentration}uM"
+                    label = f"{pp_id}@{concentration}{conc_unit}"
                 else:
                     label = f"{treatment}"
             
@@ -188,7 +198,7 @@ class HierarchicalClusteringAnalyzer:
                 moa = row.get('Metadata_annotated_target_first', '')
                 
                 if pd.notna(target_desc) and target_desc != "":
-                    target_with_conc = str(target_desc) + f"@{concentration}uM"
+                    target_with_conc = str(target_desc) + f"@{concentration}{conc_unit}"
                 else:
                     target_with_conc = treatment
                 
@@ -197,7 +207,7 @@ class HierarchicalClusteringAnalyzer:
                     parts.append(str(moa))
                 parts.append(target_with_conc)
                 if pd.notna(pp_id) and str(pp_id).strip() != "":
-                    parts.append(f"{pp_id}@{concentration}uM")
+                    parts.append(f"{pp_id}@{concentration}{conc_unit}")
                 
                 label = " | ".join(parts) if parts else treatment
             
@@ -542,15 +552,21 @@ class HierarchicalClusteringAnalyzer:
                     ax=ax_main
                 )
 
-                # Color y-axis labels by library type
-                for idx, (label, lib) in enumerate(zip(ax_main.get_yticklabels(), chunk_libraries)):
-                    if pd.notna(lib) and lib in TEST_LIBRARIES:
-                        label.set_color('blue')
-                    elif pd.notna(lib) and lib in REFERENCE_LIBRARIES:
-                        label.set_color('green')
+                # Force draw so tick label objects are fully initialised before colouring
+                fig.canvas.draw()
 
-                # Set y-axis label properties
+                # Set y-axis label properties FIRST, then colour — order matters
                 ax_main.set_yticklabels(chunk_labels, rotation=0, fontsize=3)
+
+                # Color y-axis labels by library type
+                for tick_label, lib in zip(ax_main.get_yticklabels(), chunk_libraries):
+                    if pd.notna(lib) and lib in TEST_LIBRARIES:
+                        tick_label.set_color('blue')
+                    elif pd.notna(lib) and lib in REFERENCE_LIBRARIES:
+                        tick_label.set_color('green')
+                    else:
+                        tick_label.set_color('black')
+
 
                 # Get axis limits AFTER seaborn has done all its adjustments
                 heatmap_xlim = ax_main.get_xlim()

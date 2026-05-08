@@ -26,9 +26,9 @@ skip_mode_paths:
 # ANALYSIS PARAMETERS (enhanced for consistency with SPC)
 # ============================================================================
 analysis:
-  run_landmark_analysis: false
-  run_hierarchical_clustering: false
-  hierarchical_chunk_size: 200
+  run_landmark_analysis: true
+  run_hierarchical_clustering: true
+  hierarchical_chunk_size: 500
   run_landmark_threshold_analysis: false
 
 # Landmark threshold analysis settings (optional - these are defaults)
@@ -53,10 +53,10 @@ quality_control:
 # ============================================================================
 library_definitions:
   test_libraries: 
-   - "Actin_inhibitor_panel" # Simple analysis - just treat the actin inhibitor panel as a test library
    - "HTC001324_enantiopair"
 
   reference_libraries:
+    - "Actin_inhibitor_panel"
 
 
 # ============================================================================
@@ -151,8 +151,8 @@ landmark_analysis:
 # Plate barcode to experimental metadata mapping
 plate_dict:
 
-  "000001": {"lib_plate_order": 1, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
-  "000002": {"lib_plate_order": 2, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
-  "000003": {"lib_plate_order": 3, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "test"}
+  "000001": {"lib_plate_order": 1, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "reference"}
+  "000002": {"lib_plate_order": 2, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "reference"}
+  "000003": {"lib_plate_order": 3, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "Actin_inhibitor_panel", "type": "reference"}
   "000004": {"lib_plate_order": 4, "replicate": 1, "compound_uM": null, "cell_type": "HaCaT iCas9 WT", "library": "HTC001324_enantiopair", "type": "test"}
 
