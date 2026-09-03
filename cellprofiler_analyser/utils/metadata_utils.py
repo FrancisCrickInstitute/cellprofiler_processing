@@ -206,25 +206,46 @@ def merge_perturbation_metadata(df: pd.DataFrame, metadata_df: Optional[pd.DataF
     
     logger.info(f"Merge completed. Shape: {original_shape} -> {df.shape}")
 
+    # Resolve Metadata_type / Metadata_library: per-well CSV value wins when
+    # present, otherwise fall back to the plate-level plate_dict default.
+    for field in ['Metadata_type', 'Metadata_library']:
+        csv_field = f'{field}_from_csv'
+        if csv_field in df.columns:
+            if field not in df.columns: 
+                df[field] = np.nan
+            csv_series = df[csv_field].astype(str).str.strip()
+            if field == 'Metadata_type':
+                csv_series = csv_series.str.lower()
+            csv_mask = df[csv_field].notna() & (csv_series != '') & (csv_series != 'nan')
+            df.loc[csv_mask, field] = csv_series[csv_mask]
+            df.drop(columns=[csv_field], inplace=True)
+            logger.info(f"{field}: {csv_mask.sum()} rows set from per-well CSV value, "
+                        f"{len(df) - csv_mask.sum()} fell back to plate-level default")
+
     # Resolve compound_uM source priority per row:
-    # 1. Config value (Metadata_compound_uM) - use if not null
-    # 2. CSV value (Metadata_compound_uM_from_csv) - use if config is null
+    # 1. CSV value (Metadata_compound_uM_from_csv) - use if present. This is
+    #    the per-well truth (e.g. reference compound doses fixed by well
+    #    position, same regardless of which physical plate).
+    # 2. Config value (Metadata_compound_uM) - use only as fallback when CSV
+    #    is blank. This covers test compounds, whose concentration varies by
+    #    physical plate rather than by well, and so can't be encoded in a
+    #    single deduplicated per-well CSV row.
     # 3. Neither - fail with clear error
     if 'Metadata_compound_uM_from_csv' in df.columns:
-        null_mask = df['Metadata_compound_uM'].isna()
-        n_from_config = (~null_mask).sum()
-        n_needing_csv = null_mask.sum()
-        
-        # Fill nulls from CSV
-        df.loc[null_mask, 'Metadata_compound_uM'] = df.loc[null_mask, 'Metadata_compound_uM_from_csv']
+        csv_series = pd.to_numeric(df['Metadata_compound_uM_from_csv'], errors='coerce')
+        csv_mask = csv_series.notna()
+        n_from_csv = csv_mask.sum()
+        n_needing_config = (~csv_mask).sum()
+
+        df['Metadata_compound_uM'] = csv_series.where(csv_mask, df['Metadata_compound_uM'])
         df.drop(columns=['Metadata_compound_uM_from_csv'], inplace=True)
-        
+
         still_null = df['Metadata_compound_uM'].isna().sum()
-        
-        logger.info(f"compound_uM source resolution:")
-        logger.info(f"  From config: {n_from_config} rows")
-        logger.info(f"  From CSV:    {n_needing_csv - still_null} rows")
-        logger.info(f"  Still null:  {still_null} rows")
+
+        logger.info(f"compound_uM source resolution (CSV takes priority when present):")
+        logger.info(f"  From CSV (per-well):          {n_from_csv} rows")
+        logger.info(f"  From config (plate fallback): {n_needing_config - still_null} rows")
+        logger.info(f"  Still null:                   {still_null} rows")
         
         # Per-plate breakdown
         if 'Metadata_plate_barcode' in df.columns:

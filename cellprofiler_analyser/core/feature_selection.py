@@ -322,21 +322,41 @@ class FeatureSelector:
         
         return data
     
-    def remove_low_variability_features(self, data: 'morar.DataFrame') -> 'morar.DataFrame':
+    def remove_low_variability_features(self, data: 'morar.DataFrame', 
+                                    control_compound: str = "DMSO") -> 'morar.DataFrame':
         """
-        Step 5: Remove low variability features
+        Step 5: Remove low variability features (SD < threshold in control compounds)
+        CHANGED: now computed from DMSO control wells only, matching Step 4's basis,
+        instead of the whole dataset. A feature can be near-flat in DMSO but still
+        vary substantially across active compounds -- the old whole-population std
+        let it through, then it gets divided by a near-zero DMSO-only std during
+        DMSO-baseline normalization and can dominate the cosine geometry.
         
         Args:
             data: morar DataFrame
-            
+            control_compound: Control compound name (default: "DMSO")
+        
         Returns:
             morar.DataFrame: Data with low variability features removed
         """
-        logger.info(f"Step 5: Removing features with SD < {self.low_variability_threshold}")
+        logger.info(f"Step 5: Removing features with <{self.low_variability_threshold} SD in {control_compound} controls")
         
         try:
-            # Calculate standard deviations for all feature columns
-            feature_stds = data.featuredata.std()
+            # Find control wells -- same basis as Step 4, deliberately
+            if 'Metadata_perturbation_name' in data.columns:
+                control_data = data[data['Metadata_perturbation_name'] == control_compound]
+            else:
+                logger.warning(f"No {control_compound} controls found, skipping low variability filter")
+                return data
+            
+            if len(control_data) == 0:
+                logger.warning(f"No {control_compound} control wells found, skipping low variability filter")
+                return data
+            
+            logger.info(f"Found {len(control_data)} {control_compound} control wells")
+            
+            # Calculate standard deviations for feature columns, from control wells only
+            feature_stds = control_data.featuredata.std()
             
             # Find features with low variability
             low_var_features = feature_stds[feature_stds < self.low_variability_threshold].index.tolist()
@@ -412,7 +432,7 @@ class FeatureSelector:
         data = self.remove_high_variability_features(data, control_compound)
         
         # Step 5: Remove low variability features
-        data = self.remove_low_variability_features(data)
+        data = self.remove_low_variability_features(data, control_compound)
         
         # Step 6: Remove rows with missing values
         if morar is not None:
